@@ -1,6 +1,17 @@
 'use strict';
+const {
+    Model
+} = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-    const bridging_sep = sequelize.define('bridging_sep', {
+    class bridging_sep extends Model {
+        static associate(models) {
+            bridging_sep.hasOne(models.bridging_surat_kontrol_bpjs, {
+                as: 'bridging_surat_kontrol_bpjs',
+                foreignKey: 'no_sep',
+            });
+        }
+    }
+    bridging_sep.init({
         no_sep: {
         type: DataTypes.STRING(40),
         primaryKey: true
@@ -59,12 +70,14 @@ module.exports = (sequelize, DataTypes) => {
         kddpjplayanan: DataTypes.STRING(10),
         nmdpjplayanan: DataTypes.STRING(100)
     }, {
-        freezeTableName: true,
-        timestamps: false
+        sequelize,
+        modelName: 'bridging_sep',
+        tableName: 'bridging_sep',
+        timestamps: false,
+        createdAt: false,
+        updatedAt: false,
     });
-    bridging_sep.associate = function(models) {
-        // associations can be defined here
-    }
+
     return bridging_sep;
 };
 
