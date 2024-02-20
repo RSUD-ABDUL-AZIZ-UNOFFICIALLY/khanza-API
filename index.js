@@ -9,6 +9,8 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(cors());
 
+app.use(express.urlencoded({ extended: true }));
+
 const routes = require('./routes/ranap');
 const routesicd = require('./routes/icd');
 const routespetugas = require('./routes/petugas');
@@ -24,6 +26,8 @@ app.use('/api/dashboard', dashboard);
 // app.use('/api/surat', require('./routes/surat'));
 app.use('/api/registrasi', require('./routes/registrasi'));
 app.use('/api/users', require('./routes/user'));
+
+app.use("/api/cache/", express.static("cache/"));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
