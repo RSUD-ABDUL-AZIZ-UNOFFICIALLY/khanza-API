@@ -620,11 +620,29 @@ module.exports = {
                             where: {
                                 no_sep: element.noSEP,
                             },
-                            attributes: ['nomr', 'tanggal_lahir', 'nmdiagnosaawal', 'nmdpdjp'],
+                            attributes: ['nomr', 'tanggal_lahir', 'nmdiagnosaawal', 'nmdpdjp', 'kddpjp'],
                         });
+
                         if (dataSEP == null) {
                             let getDataSEP = await axios.get(url_bpjs + '/api/bpjs/sep?noSEP=' + element.noSEP);
                             element.dataSEP = getDataSEP.data.response;
+                            let id_dokter = getDataSEP.data.response.dpjp.kdDPJP;
+                            // if (getDataSEP.dpjp.kdDPJP == "0") {
+                            //     id_dokter = getDataSEP.kontrol.kdDokter
+                            // } else {
+                            //     id_dokter = getDataSEP.dpjp.kdDPJP
+                            // }
+                            let maping = await maping_dokter_dpjpvclaim.findOne({
+                                where: {
+                                    kd_dokter_bpjs: id_dokter,
+                                },
+                                attributes: ['kd_dokter'],
+                                include: [{
+                                    model: dokter,
+                                    as: 'dokter',
+                                    attributes: ['nm_dokter']
+                                }],
+                            });
 
                             dataKlaim = {
                                 noFPK: element.noFPK,
@@ -643,9 +661,30 @@ module.exports = {
                                 inacbg_kode: element.Inacbg.kode,
                                 inacbg_nama: element.Inacbg.nama,
                                 diagnosa_sep: element.dataSEP.diagnosa,
-                                dpjp: element.dataSEP.dpjp.nmDPJP,
+                                dpjp: maping.dokter.nm_dokter,
+                                kdDPJP: id_dokter,
                             }
                         } else {
+                            if (dataSEP.nmdpdjp == "null") {
+                                let getDataSEP = await axios.get(url_bpjs + '/api/bpjs/sep?noSEP=' + element.noSEP);
+                                element.dataSEP = getDataSEP.data.response;
+                                dataSEP.kddpjp = getDataSEP.data.response.dpjp.kdDPJP;
+                            }
+                            let maping = await maping_dokter_dpjpvclaim.findOne({
+                                where: {
+                                    kd_dokter_bpjs: dataSEP.kddpjp,
+                                },
+                                attributes: ['kd_dokter'],
+                                include: [{
+                                    model: dokter,
+                                    as: 'dokter',
+                                    attributes: ['nm_dokter']
+                                }],
+                            });
+                            if (maping == null) {
+                                console.log("Data dokter tidak ditemukan");
+                                console.log(dataSEP.kddpjp);
+                            }
                             dataKlaim = {
                                 noFPK: element.noFPK,
                                 tglSep: element.tglSep,
@@ -663,7 +702,8 @@ module.exports = {
                                 inacbg_kode: element.Inacbg.kode,
                                 inacbg_nama: element.Inacbg.nama,
                                 diagnosa_sep: dataSEP.nmdiagnosaawal,
-                                dpjp: dataSEP.nmdpdjp,
+                                dpjp: maping.dokter.nm_dokter,
+                                kdDPJP: dataSEP.kddpjp,
                             }
                         }
                         dataRalan.push(dataKlaim);
@@ -796,6 +836,7 @@ module.exports = {
                     });
                     element.dpjp_ranap = dpjp.length;
                     element.data_dpjp_ranap = dpjp;
+                    console.log(element.noSEP);
                     let prolis = inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST;
                     let DIAGLIST = inacbg.find(obj => obj.SEP === element.noSEP).DIAGLIST;
 
