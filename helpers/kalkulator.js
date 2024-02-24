@@ -141,6 +141,32 @@ function penujang(duit, igd, fisioterapi, hd, oka) {
 
 }
 
+function penujangRajal(duit) {
+    let BJP_strutural = Math.round(6.5 / 100 * duit);
+    let penujang_medis = Math.round(93.5 / 100 * duit);
+    let mikro = Math.round(1 / 100 * penujang_medis);
+    let lab = Math.round(3 / 100 * penujang_medis);
+    let farmasi = Math.round(3 / 100 * penujang_medis);
+    let radiologi = Math.round(4 / 100 * penujang_medis);
+    let medis = penujang_medis - (mikro + lab + farmasi + radiologi);
+    let dokter_48 = Math.round(48 / 100 * medis);
+    let perawat_31 = Math.round(31 / 100 * medis);
+    let managemnt_21 = Math.round(21 / 100 * medis);
+    let data = {
+        BJP_strutural,
+        penujang_medis,
+        mikro,
+        lab,
+        farmasi,
+        radiologi,
+        medis,
+        dokter_48,
+        perawat_31,
+        managemnt_21
+    }
+    return data;
+}
+
 function findProlist(PROCLIST, targetValue) {
     const array = String(PROCLIST).split(";");
     // Find the index of the target value in the array
@@ -153,6 +179,8 @@ function findProlist(PROCLIST, targetValue) {
     return
 }
 
+
+
 module.exports = {
     BPJS_Setujui,
     formasi,
@@ -161,6 +189,7 @@ module.exports = {
     ventilator,
     medis,
     findProlist,
+    penujangRajal
 
 
 }

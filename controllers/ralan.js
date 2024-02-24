@@ -16,6 +16,7 @@ const {
     OKA,
     ventilator,
     findProlist,
+    penujangRajal
 } = require('../helpers/kalkulator');
 module.exports = {
     getIGD: async (req, res) => {
@@ -685,6 +686,9 @@ module.exports = {
                                 console.log("Data dokter tidak ditemukan");
                                 console.log(dataSEP.kddpjp);
                             }
+                            let totaltarif = parseInt(element.biaya.bySetujui);
+                            let bagi_rs = BPJS_Setujui(totaltarif);
+                            let data_penujangRajal = penujangRajal(bagi_rs.Jasa_pelayanan);
                             dataKlaim = {
                                 noFPK: element.noFPK,
                                 tglSep: element.tglSep,
@@ -693,17 +697,27 @@ module.exports = {
                                 poli: element.poli,
                                 tarifbyTarifGruper: element.biaya.byTarifGruper,
                                 tarifbyTarifRS: element.biaya.byTarifRS,
-                                tarifbySetujui: parseInt(element.biaya.bySetujui),
                                 pesertaNama: element.peserta.nama,
                                 pesertaNoMr: element.peserta.noMr,
-                                peserta_tglLahir: dataSEP.tgl_lahir,
                                 pesertaNoBPJS: element.peserta.noKartu,
                                 pesertahakKelas: element.peserta.hakKelas,
                                 inacbg_kode: element.Inacbg.kode,
                                 inacbg_nama: element.Inacbg.nama,
                                 diagnosa_sep: dataSEP.nmdiagnosaawal,
                                 dpjp: maping.dokter.nm_dokter,
-                                kdDPJP: dataSEP.kddpjp,
+                                tarifbySetujui: totaltarif,
+                                Jasa_sarana: bagi_rs.Jasa_sarana,
+                                Jasa_pelayanan: bagi_rs.Jasa_pelayanan,
+                                BJP_strutural: data_penujangRajal.BJP_strutural,
+                                penujang_medis: data_penujangRajal.penujang_medis,
+                                mikro: data_penujangRajal.mikro,
+                                lab: data_penujangRajal.lab,
+                                farmasi: data_penujangRajal.farmasi,
+                                radiologi: data_penujangRajal.radiologi,
+                                medis: data_penujangRajal.medis,
+                                dokter_48: data_penujangRajal.dokter_48,
+                                perawat_31: data_penujangRajal.perawat_31,
+                                managemnt_21: data_penujangRajal.managemnt_21,
                             }
                         }
                         dataRalan.push(dataKlaim);
@@ -862,6 +876,8 @@ module.exports = {
                     let js_pr_inapB2 = Math.round(lamaInapB2 / lamaInap * bagi_medis.pr_ruangan);
                     let js_pr_inapB3 = Math.round(lamaInapB3 / lamaInap * bagi_medis.pr_ruangan);
                     let js_pr_inapB4 = Math.round(lamaInapB4 / lamaInap * bagi_medis.pr_ruangan);
+                    if (bedah) {
+                    }
 
 
 
