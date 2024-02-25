@@ -77,8 +77,8 @@ function medis(duit, duit_karu, igd) {
 }
 
 function OKA(duit) {
-    let dpjp_OK = Math.round(60 / 100 * duit);
-    let anestsi_OK = Math.round(40 / 100 * duit);
+    let dpjp_OK = Math.round(60 / 100 * duit);// 65
+    let anestsi_OK = Math.round(40 / 100 * duit); // 35
     let dr_anestesi = Math.round(80 / 100 * anestsi_OK);
     let pr_anestesi = Math.round(20 / 100 * anestsi_OK);
     let dr_operator_OK = Math.round(70 / 100 * dpjp_OK);
@@ -110,7 +110,11 @@ function ventilator(duit) {
 }
 
 
-function penujang(duit, igd, fisioterapi, hd, oka) {
+// dr operator OBGYN, bedah, tht, mata, 
+
+// Buat Rekap Total
+
+function penujang(duit, igd, fisioterapi, hd, oka) { // tambah dr dan pr  ambil di depan
     let jsOKA = 10;
     if (oka) {
         jsOKA = 5;
