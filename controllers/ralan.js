@@ -644,6 +644,9 @@ module.exports = {
                                     attributes: ['nm_dokter']
                                 }],
                             });
+                            let totaltarif = parseInt(element.biaya.bySetujui);
+                            let bagi_rs = BPJS_Setujui(totaltarif);
+                            let data_penujangRajal = penujangRajal(bagi_rs.Jasa_pelayanan);
 
                             dataKlaim = {
                                 noFPK: element.noFPK,
@@ -658,12 +661,24 @@ module.exports = {
                                 pesertaNoMr: element.peserta.noMr,
                                 peserta_tglLahir: element.dataSEP.peserta.tglLahir,
                                 pesertaNoBPJS: element.dataSEP.peserta.noKartu,
-                                pesertahakKelas: element.dataSEP.peserta.hakKelas,
+                                pesertahakKelas: element.peserta.hakKelas,
                                 inacbg_kode: element.Inacbg.kode,
                                 inacbg_nama: element.Inacbg.nama,
                                 diagnosa_sep: element.dataSEP.diagnosa,
                                 dpjp: maping.dokter.nm_dokter,
-                                kdDPJP: id_dokter,
+                                tarifbySetujui: totaltarif,
+                                Jasa_sarana: bagi_rs.Jasa_sarana,
+                                Jasa_pelayanan: bagi_rs.Jasa_pelayanan,
+                                BJP_strutural: data_penujangRajal.BJP_strutural,
+                                penujang_medis: data_penujangRajal.penujang_medis,
+                                mikro: data_penujangRajal.mikro,
+                                lab: data_penujangRajal.lab,
+                                farmasi: data_penujangRajal.farmasi,
+                                radiologi: data_penujangRajal.radiologi,
+                                medis: data_penujangRajal.medis,
+                                dokter_48: data_penujangRajal.dokter_48,
+                                perawat_31: data_penujangRajal.perawat_31,
+                                managemnt_21: data_penujangRajal.managemnt_21,
                             }
                         } else {
                             if (dataSEP.nmdpdjp == "null") {
@@ -699,6 +714,7 @@ module.exports = {
                                 tarifbyTarifRS: element.biaya.byTarifRS,
                                 pesertaNama: element.peserta.nama,
                                 pesertaNoMr: element.peserta.noMr,
+                                peserta_tglLahir: dataSEP.tanggal_lahir,
                                 pesertaNoBPJS: element.peserta.noKartu,
                                 pesertahakKelas: element.peserta.hakKelas,
                                 inacbg_kode: element.Inacbg.kode,
@@ -742,7 +758,7 @@ module.exports = {
             if (param.pelayanan == 1) {
                 let filename = 'Ranap_' + token + '.json'
                 let dataRanap = [];
-                const fileContent = fs.readFileSync('controllers/inacbg/inacbg_sep2023.json', 'utf-8');
+                const fileContent = fs.readFileSync('controllers/inacbg/inacbg_okt2023.json', 'utf-8');
                 let inacbg = JSON.parse(fileContent);
                 for (const element of klaim) {
                     let dataSEP = await bridging_sep.findOne({
