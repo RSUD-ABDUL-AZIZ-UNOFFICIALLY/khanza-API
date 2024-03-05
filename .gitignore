@@ -5,3 +5,5 @@ package-lock.json
 .envprod
 cache/*
 !cache/.gitkeep
+!cache/bangsal/.gitkeep
+!cache/dpjp/.gitkeep
