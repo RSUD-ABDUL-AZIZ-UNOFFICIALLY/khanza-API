@@ -1,5 +1,5 @@
 'use strict';
-const { reg_periksa, pasien, dokter, poliklinik, jadwal, pegawai, pemeriksaan_ralan, bridging_sep, dpjp_ranap, operasi, paket_operasi, bangsal, kamar, kamar_inap, maping_dokter_dpjpvclaim } = require('../models');
+const { reg_periksa, pasien, dokter, poliklinik, jadwal, pegawai, pemeriksaan_ralan, bridging_sep, dpjp_ranap, operasi, paket_operasi, bangsal, kamar, kamar_inap, maping_dokter_dpjpvclaim, rujukan_internal_poli } = require('../models');
 const moment = require('moment');
 const axios = require('axios');
 const { Op } = require("sequelize");
@@ -21,6 +21,7 @@ const {
     parsingBangsal,
     parsingDPJP
 } = require('../helpers/kalkulator');
+const { get } = require('http');
 module.exports = {
     getIGD: async (req, res) => {
         try {
@@ -420,7 +421,7 @@ module.exports = {
                 from.add(1, 'day');
             }
 
-            const getData = await axios.get(url_bpjs + '/api/bpjs/monit?from=' + req.query.from + '&until=' + req.query.until + '&pelayanan=' + pelayanan + '&status=' + status);
+            const getData = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + req.query.from + '&until=' + req.query.until + '&pelayanan=' + pelayanan + '&status=' + status);
 
             klaim = getData.data.response.data;
             if (status == 1 || status == 2) {
@@ -595,7 +596,7 @@ module.exports = {
                 const fileContent = fs.readFileSync('cache/' + token + '.json');
                 klaim = JSON.parse(fileContent);
             } else {
-                const getData = await axios.get(url_bpjs + '/api/bpjs/monit?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan + '&status=' + param.status);
+                const getData = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan + '&status=' + param.status);
                 klaim = getData.data.response.data;
 
                 fs.writeFile('./cache/' + token + '.json', JSON.stringify(klaim), (err, klaim) => {
@@ -1028,7 +1029,7 @@ module.exports = {
             const port = process.env.PORT || 3000;
             const fullUrl = `${protocol}://${host}:${port}/api/cache/`
             let klaim = [];
-            const getData = await axios.get(url_bpjs + '/api/bpjs/monit?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan + '&status=' + param.status);
+            const getData = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan + '&status=' + param.status);
             klaim = getData.data.response.data;
             let filterFPK = param.filterFPK.split(',');
             for (let noFPK of filterFPK) {
@@ -1040,6 +1041,194 @@ module.exports = {
                     message: 'Data klaim',
                     record: klaim.length,
                     data: klaim,
+                });
+            }
+
+            if (param.pelayanan == 2) {
+                let dataRalan = [];
+                let dataRalanRaber = [];
+                let datanoFPK = [];
+                let filename = 'ralan_' + token + '.json'
+                for (const element of klaim) {
+                    if (datanoFPK.find(obj => obj.noFPK === element.noFPK)) {
+                        let foundObject = datanoFPK.find(obj => obj.noFPK === element.noFPK)
+                        if (foundObject) {
+                            foundObject.byTarifRS += parseInt(element.biaya.byTarifRS);
+                            foundObject.bySetujui += parseInt(element.biaya.bySetujui);
+                            foundObject.count++
+                        }
+                    } else {
+                        let newObj = { noFPK: element.noFPK, bySetujui: parseInt(element.biaya.bySetujui), byTarifRS: parseInt(element.biaya.byTarifRS), count: 1 };
+                        datanoFPK.push(newObj)
+
+                    }
+                    let dataKlaim
+                    let dataSEP = await bridging_sep.findOne({
+                        where: {
+                            no_sep: element.noSEP,
+                        },
+                        attributes: ['no_rawat', 'nomr', 'tanggal_lahir', 'nmdiagnosaawal', 'nmdpdjp', 'kddpjp'],
+                    });
+
+                    let totaltarif = parseInt(element.biaya.bySetujui);
+                    let bagi_rs = BPJS_Setujui(totaltarif);
+                    let data_penujangRajal = penujangRajal(bagi_rs.Jasa_pelayanan);
+                    let dr_dpjp = '';
+                    let peserta_tglLahir = '';
+                    let pesertaNoBPJS = '';
+                    let diagnosa_sep = '';
+                    let no_reg_rawat = '';
+
+                    if (dataSEP == null) {
+                        let getDataSEP = await axios.get(url_bpjs + '/api/bpjs/sep?noSEP=' + element.noSEP);
+                        element.dataSEP = getDataSEP.data.response;
+                        let id_dokter = getDataSEP.data.response.dpjp.kdDPJP;
+                        let maping = await maping_dokter_dpjpvclaim.findOne({
+                            where: {
+                                kd_dokter_bpjs: id_dokter,
+                            },
+                            attributes: ['kd_dokter'],
+                            include: [{
+                                model: dokter,
+                                as: 'dokter',
+                                attributes: ['nm_dokter']
+                            }],
+                        });
+                        let reg = await reg_periksa.findOne({
+                            where: {
+                                no_rkm_medis: getDataSEP.data.response.peserta.noMr,
+                                tgl_registrasi: getDataSEP.data.response.tglSep,
+                            },
+                            // attributes: ['no_rawat'],
+                        });
+                        dr_dpjp = maping.dokter.nm_dokter;
+                        peserta_tglLahir = element.dataSEP.peserta.tglLahir;
+                        pesertaNoBPJS = element.dataSEP.peserta.noKartu;
+                        diagnosa_sep = element.dataSEP.diagnosa;
+                        console.log(reg);
+                        no_reg_rawat = reg.no_rawat;
+
+                    } else {
+                        if (dataSEP.nmdpdjp == "null") {
+                            let getDataSEP = await axios.get(url_bpjs + '/api/bpjs/sep?noSEP=' + element.noSEP);
+                            element.dataSEP = getDataSEP.data.response;
+                            dataSEP.kddpjp = getDataSEP.data.response.dpjp.kdDPJP;
+                        }
+                        let maping = await maping_dokter_dpjpvclaim.findOne({
+                            where: {
+                                kd_dokter_bpjs: dataSEP.kddpjp,
+                            },
+                            attributes: ['kd_dokter'],
+                            include: [{
+                                model: dokter,
+                                as: 'dokter',
+                                attributes: ['nm_dokter']
+                            }],
+                        });
+                        if (maping == null) {
+                            console.log("Data dokter tidak ditemukan");
+                            console.log(dataSEP.kddpjp);
+                        }
+                        dr_dpjp = maping.dokter.nm_dokter;
+                        peserta_tglLahir = dataSEP.tanggal_lahir;
+                        pesertaNoBPJS = element.peserta.noKartu;
+                        diagnosa_sep = dataSEP.nmdiagnosaawal;
+                        no_reg_rawat = dataSEP.no_rawat;
+                    }
+                    let jasa_dr = data_penujangRajal.dokter_48;
+                    let raber = await rujukan_internal_poli.findOne({
+                        where: {
+                            no_rawat: no_reg_rawat,
+                        },
+                        include: [{
+                            model: poliklinik,
+                            as: 'poliklinik',
+                            attributes: ['nm_poli']
+                        },
+                        {
+                            model: dokter,
+                            as: 'dokter',
+                            attributes: ['nm_dokter']
+                        }],
+                        // attributes: ['no_rawat'],
+                    });
+                    if (raber) {
+                        jasa_dr = Math.round(jasa_dr * 60 / 100);
+
+                        let dataRaber = {
+                            noFPK: element.noFPK,
+                            tglSep: element.tglSep,
+                            no_rawat: no_reg_rawat,
+                            noSEP: element.noSEP,
+                            kelasRawat: element.kelasRawat,
+                            poli: element.poli,
+                            tarifbyTarifGruper: parseInt(element.biaya.byTarifGruper),
+                            tarifbyTarifRS: parseInt(element.biaya.byTarifRS),
+                            tarifbySetujui: parseInt(element.biaya.bySetujui),
+                            pesertaNama: element.peserta.nama,
+                            pesertaNoMr: element.peserta.noMr,
+                            peserta_tglLahir: peserta_tglLahir,
+                            pesertaNoBPJS: pesertaNoBPJS,
+                            pesertahakKelas: element.peserta.hakKelas,
+                            inacbg_kode: element.Inacbg.kode,
+                            inacbg_nama: element.Inacbg.nama,
+                            diagnosa_sep: diagnosa_sep,
+                            dpjp: dr_dpjp,
+                            raber_poli: raber.poliklinik.nm_poli,
+                            raber_dokter: raber.dokter.nm_dokter,
+                            dokter_48: data_penujangRajal.dokter_48,
+                            jasa_dr_raber: Math.round(data_penujangRajal.dokter_48 * 40 / 100),
+                        }
+                        dataRalanRaber.push(dataRaber);
+                    }
+                    dataKlaim = {
+                        noFPK: element.noFPK,
+                        tglSep: element.tglSep,
+                        no_rawat: no_reg_rawat,
+                        noSEP: element.noSEP,
+                        kelasRawat: element.kelasRawat,
+                        poli: element.poli,
+                        tarifbyTarifGruper: parseInt(element.biaya.byTarifGruper),
+                        tarifbyTarifRS: parseInt(element.biaya.byTarifRS),
+                        tarifbySetujui: parseInt(element.biaya.bySetujui),
+                        pesertaNama: element.peserta.nama,
+                        pesertaNoMr: element.peserta.noMr,
+                        peserta_tglLahir: peserta_tglLahir,
+                        pesertaNoBPJS: pesertaNoBPJS,
+                        pesertahakKelas: element.peserta.hakKelas,
+                        inacbg_kode: element.Inacbg.kode,
+                        inacbg_nama: element.Inacbg.nama,
+                        diagnosa_sep: diagnosa_sep,
+                        dpjp: dr_dpjp,
+                        tarifbySetujui: totaltarif,
+                        Jasa_sarana: bagi_rs.Jasa_sarana,
+                        Jasa_pelayanan: bagi_rs.Jasa_pelayanan,
+                        BJP_strutural: data_penujangRajal.BJP_strutural,
+                        penujang_medis: data_penujangRajal.penujang_medis,
+                        mikro: data_penujangRajal.mikro,
+                        lab: data_penujangRajal.lab,
+                        farmasi: data_penujangRajal.farmasi,
+                        radiologi: data_penujangRajal.radiologi,
+                        medis: data_penujangRajal.medis,
+                        dokter_48: data_penujangRajal.dokter_48,
+                        jasa_dr: jasa_dr,
+                        raber_poli: raber ? raber.poliklinik.nm_poli : '-',
+                        perawat_31: data_penujangRajal.perawat_31,
+                        managemnt_21: data_penujangRajal.managemnt_21,
+                    }
+                    dataRalan.push(dataKlaim);
+                }
+
+                fs.writeFileSync('./cache/' + "dataRalan.json", JSON.stringify(dataRalan));
+                fs.writeFileSync('./cache/' + "dataRalanRaber.json", JSON.stringify(dataRalanRaber));
+                fs.writeFileSync('./cache/' + "rawRalanRaber.json", JSON.stringify({ repot: datanoFPK, Ralan: dataRalan, "Ralan Raber": dataRalanRaber }));
+
+                return res.status(200).json({
+                    status: true,
+                    message: 'Data klaim Ralan',
+                    url: fullUrl + "rawRalanRaber.json",
+                    record: klaim.length,
+                    data: dataRalan,
                 });
             }
             // ranap
@@ -1067,7 +1256,7 @@ module.exports = {
                 let js_dpjp = {
                     AGUSTINUS: [],
                     ALFONS: [],
-                    ARI: [],
+                    "ARI ": [],
                     BORIS: [],
                     DAVIS: [],
                     DIANA: [],
@@ -1209,15 +1398,14 @@ module.exports = {
                     let DIAGLIST = inacbg.find(obj => obj.SEP === element.noSEP).DIAGLIST;
 
                     let igd = (element.reg_maksuk.poliklinik.nm_poli == 'IGD') ? true : false;
-                    let fisio = findProlist(prolis, '93.39');
                     let hemo = (findProlist(prolis, '39.95') || findProlist(prolis, '38.93') || findProlist(prolis, '38.95')) ? true : false;
-                    let duit_karu = param.duit_karu;
                     let venti = (findProlist(prolis, '96.72') || findProlist(prolis, '96.71')) ? true : false;
                     let bedah = inacbg.find(obj => obj.SEP === element.noSEP).PROSEDUR_BEDAH > 0 ? true : false;
                     let bagi_rs = BPJS_Setujui(parseInt(element.biaya.bySetujui));
                     let duit_formasi = formasi(bagi_rs.Jasa_pelayanan, venti, bedah);
                     let bagi_penujang = penujang(duit_formasi.bangsal, igd, bedah);
                     let bagi_tindakanPerawat = tindakanPerawat(bagi_penujang.tindakan2persen, prolis)
+                    let sisa2 = Math.round(bagi_penujang.tindakan2persen - bagi_tindakanPerawat.tindakan_usg - bagi_tindakanPerawat.fisioterapi - bagi_tindakanPerawat.EKG - bagi_tindakanPerawat.GDS - bagi_tindakanPerawat.USG);
                     let bagi_medis = medis(bagi_penujang.sisa, hemo);
                     let duit_oka = OKA(duit_formasi.bedah);
                     let duit_ventilator = ventilator(duit_formasi.venti);
@@ -1290,12 +1478,12 @@ module.exports = {
                         Jasa_pelayanan: bagi_rs.Jasa_pelayanan,
                         formasi_bangsal: duit_formasi.bangsal,
                         bcu: bagi_penujang.bcu,
-                        tindakan2persen: bagi_penujang.tindakan2persen,
+                        "tindakan2%": bagi_penujang.tindakan2persen,
                         fisio: bagi_tindakanPerawat.fisioterapi,
-                        ekg: bagi_tindakanPerawat.EKG,
-                        gds: bagi_tindakanPerawat.GDS,
-                        USG: bagi_tindakanPerawat.USG,
-                        sisa2persen: (bagi_penujang.tindakan2persen - bagi_tindakanPerawat.tindakan_usg - bagi_tindakanPerawat.fisioterapi - bagi_tindakanPerawat.EKG - bagi_tindakanPerawat.GDS - bagi_tindakanPerawat.USG),
+                        ekg: Math.round(bagi_tindakanPerawat.EKG),
+                        gds: Math.round(bagi_tindakanPerawat.GDS),
+                        usg: Math.round(bagi_tindakanPerawat.USG),
+                        "sisa2%": sisa2,
                         struktural: bagi_penujang.BJP_strutural,
                         lab: bagi_penujang.lab,
                         mikro: bagi_penujang.mkro,
@@ -1342,12 +1530,13 @@ module.exports = {
                     }
 
                     for (let key in js_dpjp) {
-                        let js = parsingDPJP(dataKlaim, key);
+                        let js = parsingDPJP(dataKlaim, key, js_dpjp);
                         if (js !== null) {
                             js_dpjp[key].push(js);
                         }
                     }
                 }
+
                 try {
                     for (let key in js_pr) {
                         fs.writeFileSync('./cache/bangsal/' + key + ".json", JSON.stringify(js_pr[key]));
@@ -1401,5 +1590,31 @@ module.exports = {
                 data: error.message
             });
         }
+    },
+    monitoringJasa: async (req, res) => {
+        try {
+            let param = req.query;
+            const protocol = req.protocol;
+            const host = req.hostname;
+            const port = process.env.PORT || 3000;
+            const fullUrl = `${protocol}://${host}:${port}/api/cache/`
+            let getProses = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan + '&status=1');
+            getProses = getProses.data.response.data;
+            let getPending = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan + '&status=2');
+            getPending = getPending.data.response.data;
+            let getKlaim = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan + '&status=3');
+            getKlaim = getKlaim.data.response.data;
+            let totalSEP = await axios.get(url_bpjs + '/api/bpjs/monitoring/kunjungan?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan);
+            totalSEP = totalSEP.data.response.data;
+            let belum = [];
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({
+                status: false,
+                message: 'error',
+                data: error.message
+            });
+        }
     }
+
 }

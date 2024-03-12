@@ -122,7 +122,6 @@ function penujang(duit, igd, oka) { // tambah dr dan pr  ambil di depan
     let radiologi = Math.round(4 / 100 * duit);
     let drIGD = igd ? 50000 : 0;
     let pr_igd = Math.round(igd ? 70000 : 0);
-    // let hemo = hd ? 100000 : 0;
     let sisa = duit - (bcu + tindakan2persen + BJP_strutural + lab + mkro + farmasi + radiologi + drIGD + pr_igd);
     let data = {
         bcu,
@@ -134,7 +133,6 @@ function penujang(duit, igd, oka) { // tambah dr dan pr  ambil di depan
         radiologi,
         drIGD,
         pr_igd,
-        // hemo,
         sisa
     }
     return data;
@@ -248,8 +246,19 @@ function parsingBangsal(dataKlaim, bangsal) {
     }
     return null;
 }
-function parsingDPJP(dataKlaim, dpjp) {
+function parsingDPJP(dataKlaim, dpjp, js_dpjp) {
     if (dataKlaim.DPJP_INACBG.includes(dpjp)) {
+        let jumlah_dpjp = 0;
+        let dpjp_ke = 0;
+        for (let key in js_dpjp) {
+            if (dataKlaim.DPJP_INACBG.includes(key)) {
+                jumlah_dpjp++;
+            }
+        }
+        if (jumlah_dpjp === 1) {
+            dpjp_ke = 1;
+        }
+
         let dataPasein = {
             noFPK: dataKlaim.noFPK,
             SEP: dataKlaim.SEP,
@@ -263,12 +272,20 @@ function parsingDPJP(dataKlaim, dpjp) {
             tglSep: dataKlaim.tglSep,
             tglPulang: dataKlaim.tglPulang,
             lamaInap: dataKlaim.LOS,
-            DPJP_INACBG: dataKlaim.DPJP_INACBG,
-            dpjp_ranap_bpj: dataKlaim.dpjp_ranap_bpj,
-            dpjp_ranap_RS1: dataKlaim.dpjp_ranap_RS1,
-            dpjp_ranap_RS2: dataKlaim.dpjp_ranap_RS2,
-            dpjp_ranap_RS3: dataKlaim.dpjp_ranap_RS3,
             dpjp_ranap_RS4: dataKlaim.dpjp_ranap_RS4,
+            dpjp_ranap_RS3: dataKlaim.dpjp_ranap_RS3,
+            dpjp_ranap_RS2: dataKlaim.dpjp_ranap_RS2,
+            dpjp_ranap_RS1: dataKlaim.dpjp_ranap_RS1,
+            dpjp_ranap_bpj: dataKlaim.dpjp_ranap_bpj,
+            DPJP_INACBG: dataKlaim.DPJP_INACBG,
+            jumlah_dpjp: jumlah_dpjp,
+            dpjp_ke: dpjp_ke,
+            dpjp1: 0,
+            dpjp2: 0,
+            dpjp3: 0,
+            dpjp4: 0,
+            js_utama: 0,
+            js_raber: 0,
             BEDAH: dataKlaim.BEDAH,
             VENTI: dataKlaim.VENTI,
             CVC: dataKlaim.CVC,
@@ -279,6 +296,9 @@ function parsingDPJP(dataKlaim, dpjp) {
             Bronkoskopi: dataKlaim.Bronkoskopi,
             dr_DPJP_48: dataKlaim.dr_DPJP_48,
             dr_operator_OK: dataKlaim.dr_operator_OK,
+            jumlah_operator: 0,
+            dr_operator_OK_ke: 0,
+            dr_operator_OK1: 0,
             dr_anestesi_OK: dataKlaim.dr_anestesi_OK,
             formasi_venti: dataKlaim.formasi_venti,
             dr_anestesi_venti: dataKlaim.dr_anestesi_venti,

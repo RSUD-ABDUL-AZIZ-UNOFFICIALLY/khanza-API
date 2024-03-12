@@ -1,26 +1,26 @@
-let x = 'y'
-let y = 'z'
-let z = 'x'
+// let x = 'y'
+// let y = 'z'
+// let z = 'x'
 
-let data = !(x === 'y' || y === 'y' || z === 'y')
-console.log(data)
+// let data = !(x === 'y' || y === 'y' || z === 'y')
+// console.log(data)
 
-var dataString = "DR AGUSTINUS B, SP.OT/DR RACHIM,SP.JP/DR FREDDY,SP.PD/DR MAR";
-var keyword = "AGUSTINUS";
+// var dataString = "DR AGUSTINUS B, SP.OT/DR RACHIM,SP.JP/DR FREDDY,SP.PD/DR MAR";
+// var keyword = "AGUSTINUS";
 
-// Metode indexOf
-if (dataString.indexOf(keyword) !== -1) {
-    console.log("Kata ditemukan!");
-} else {
-    console.log("Kata tidak ditemukan.");
-}
+// // Metode indexOf
+// if (dataString.indexOf(keyword) !== -1) {
+//     console.log("Kata ditemukan!");
+// } else {
+//     console.log("Kata tidak ditemukan.");
+// }
 
-// Metode includes
-if (dataString.includes(keyword)) {
-    console.log("Kata ditemukan!");
-} else {
-    console.log("Kata tidak ditemukan.");
-}
+// // Metode includes
+// if (dataString.includes(keyword)) {
+//     console.log("Kata ditemukan!");
+// } else {
+//     console.log("Kata tidak ditemukan.");
+// }
 // ARI PRABOWO(IGD)
 // DR AGUSTINUS B, SP.OT/DR ALFONS,SP.AN/DR RACHIM,SP.JP/DR RAH
 // DR AGUSTINUS B, SP.OT/DR ALFONS,SP.AN/DR RAHMAD,SP.PD/DR U Y
@@ -529,7 +529,7 @@ if (dataString.includes(keyword)) {
 let js_dpjp = {
     AGUSTINUS: [],
     ALFONS: [],
-    ARI: [],
+    "ARI ": [],
     BORIS: [],
     DAVIS: [],
     DIANA: [],
@@ -559,7 +559,14 @@ let js_dpjp = {
     YUNITA: [],
     ZAINUL: []
 };
-console.log(js_dpjp)
+let dpjp_inacbg = "DR. DAVIS SP.OG/DR. ARI SP.P/DR. BORIS SP.B/DR. MARIA ADE SP.M";
+// console.log(js_dpjp)
+let jumlah_dpjp = 0;
 for (let key in js_dpjp) {
+    if (dpjp_inacbg.includes('key')) {
     console.log(key);
+        jumlah_dpjp++;
 }
+
+}
+console.log(jumlah_dpjp);

@@ -19,6 +19,7 @@ routes.post('/pemeriksaan', middleware.check, ralan.postPemeriksaan);
 routes.get('/jasa', ralan.getJasaRalan);
 routes.get('/jasaruangan', ralan.getJasaRuangan);
 routes.get('/getJasaDrRanap', ralan.getJasaDrRanap);
+routes.get('/monitoring/jasa', ralan.monitoringJasa);
 
 
 module.exports = routes;
