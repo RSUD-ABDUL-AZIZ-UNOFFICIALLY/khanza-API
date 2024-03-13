@@ -14,7 +14,7 @@ module.exports = {
             });
         }
         let dataPoli = await maping_poli_bpjs.findAll();
-        let dataDr = await maping_dokter_dpjpvclaim.findAll();
+
         let jadwalDr = [];
         for (let x of dataPoli) {
             let jadwal = await axios.get(url_bpjs + `/api/bpjs/antrean/jadwaldokter?tanggal=${req.query.tanggal}&kd_poli_BPJS=${x.kd_poli_bpjs}`);
@@ -61,14 +61,15 @@ module.exports = {
                     pxTidakLengkap.push(x);
                 }
                 x.reg_px = reg_px;
-                let data_poli = dataPoli.find(item => item.kd_poli_bpjs === x.poli);
-                x.nm_poli = data_poli;
+
 
             }
             dataSEP = dataSEP.filter(item => item.reg_px !== null);
             for (let x of dataSEP) {
-                let nm_dokter = dataDr.find(item => item.kd_dokter === x.reg_px.kd_dokter);
-                let jadwaldrPoli = jadwalDr.find(x => x.kodedokter === parseInt(nm_dokter.kd_dokter_bpjs));
+
+                let nomorSEP = await axios.get(url_bpjs + `/api/bpjs/sep?noSEP=${x.noSep}`);
+                let data_poli = dataPoli.find(item => item.nm_poli_bpjs === nomorSEP.data.response.poli);
+                let jadwaldrPoli = jadwalDr.find(x => x.kodedokter === parseInt(nomorSEP.data.response.dpjp.kdDPJP));
                 let jamReg = new Date(x.reg_px.tgl_registrasi + ' ' + x.reg_px.jam_reg);
                 jamReg.setTime(jamReg.getTime() + 10 * 60 * 1000);
                 let addAntrol = {
@@ -77,13 +78,13 @@ module.exports = {
                     "nomorkartu": x.noKartu,
                     "nik": x.dataPx.peserta.nik,
                     "nohp": x.dataPx.peserta.mr.noTelepon,
-                    "kodepoli": x.poli,
-                    "namapoli": x.nm_poli.nm_poli_bpjs,
+                    "kodepoli": data_poli.kd_poli_bpjs,
+                    "namapoli": nomorSEP.data.response.poli,
                     "pasienbaru": x.reg_px.stts_daftar === 'Baru' ? 1 : 0,
                     "norm": x.dataPx.peserta.mr.noMR,
                     "tanggalperiksa": req.query.tanggal,
-                    "kodedokter": parseInt(nm_dokter.kd_dokter_bpjs),
-                    "namadokter": nm_dokter.nm_dokter_bpjs,
+                    "kodedokter": parseInt(nomorSEP.data.response.dpjp.kdDPJP),
+                    "namadokter": nomorSEP.data.response.dpjp.nmDPJP,
                     "jampraktek": jadwaldrPoli.jadwal,
                     "jeniskunjungan": 3,
                     "nomorreferensi": x.noRujukan,
@@ -103,7 +104,7 @@ module.exports = {
                 }
                 logAntrol.push(data.data);
             }
-            // fs.writeFileSync('./cache/' + `antrol${req.query.tanggal}.json`, JSON.stringify(dataAntrol));
+            fs.writeFileSync('./cache/' + `antrol${req.query.tanggal}.json`, JSON.stringify(dataAntrol));
             fs.writeFileSync('./cache/' + `logAntrol${req.query.tanggal}.json`, JSON.stringify(logAntrol));
             return res.status(200).json({
                 status: false,
