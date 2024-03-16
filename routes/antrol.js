@@ -7,4 +7,5 @@ const antrol = require('../controllers/antrol');
 
 
 routes.get('/hit', antrol.hit);
+routes.get('/test', antrol.test);
 module.exports = routes;
