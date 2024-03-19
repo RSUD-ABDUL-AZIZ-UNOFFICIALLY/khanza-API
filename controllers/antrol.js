@@ -186,6 +186,9 @@ module.exports = {
                     console.log('Response time antrean add :', responseTime, 'milliseconds');
                 } catch (error) {
                     console.error(error);
+                    logAntrol.push(addAntrol);
+                    logAntrol.push(error);
+
                 }
             }
 
