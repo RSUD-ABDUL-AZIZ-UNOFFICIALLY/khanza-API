@@ -1,0 +1,16 @@
+PORT=8000
+# DB_USERNAME=al
+# DB_PASSWORD=
+# DB_NAME=
+# DB_HOST=localhost
+# DB_DIALECT=mariadb
+
+JWT_SECRET_KEY=""
+# NODE_ENV=
+
+# URL_BPJS="http://localhost:8080"
+
+
+REDIS_URL=""
+REDIS_URL_PORT=
+REDIS_PASSWORD=""

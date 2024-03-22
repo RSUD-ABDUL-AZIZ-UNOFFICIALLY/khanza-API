@@ -24,6 +24,7 @@ app.use('/api/dashboard', dashboard);
 // app.use('/api/surat', require('./routes/surat'));
 app.use('/api/registrasi', require('./routes/registrasi'));
 app.use('/api/users', require('./routes/user'));
+app.use('/api/bpj/antrol', require('./routes/antrol'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

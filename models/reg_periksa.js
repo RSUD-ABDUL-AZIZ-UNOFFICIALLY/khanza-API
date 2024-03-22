@@ -46,6 +46,16 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'no_rawat',
         as: 'diagnosa_pasien'
       });
+      reg_periksa.hasOne(models.maping_dokter_dpjpvclaim, {
+        foreignKey: 'kd_dokter',
+        sourceKey: 'kd_dokter',
+        as: 'maping_dokter_dpjpvclaim'
+      });
+      reg_periksa.hasOne(models.maping_poli_bpjs, {
+        foreignKey: 'kd_poli_rs',
+        sourceKey: 'kd_poli',
+        as: 'maping_poli_bpjs'
+      });
       
       
       
