@@ -1,5 +1,5 @@
 "use strict";
-const { reg_periksa, poliklinik, penjab, kamar_inap, kamar, bangsal } = require("../models");
+const { reg_periksa, poliklinik, penjab, kamar_inap, kamar, bangsal, Sequelize } = require("../models");
 const { Op } = require("sequelize");
 module.exports = {
   poliHarian: async (req, res) => {
@@ -706,49 +706,35 @@ module.exports = {
           },
         ],
       });
-      const counts = [];
-      for (let i of kamars) {
-        let { isi, kosong, booking, total } = 0;
-        isi = await kamar.count({
-          where: {
-            kd_bangsal: i.kd_bangsal,
-            status: "ISI",
-            statusdata: "1",
+      let kd_bangsal = kamars.map(item => item.kd_bangsal);
+      let datakamar = await kamar.findAll({
+        attributes: ['kd_bangsal',
+          [Sequelize.fn('SUM', Sequelize.literal("CASE WHEN status = 'ISI' THEN 1 ELSE 0 END")), 'isi'],
+          [Sequelize.fn('SUM', Sequelize.literal("CASE WHEN status = 'KOSONG' THEN 1 ELSE 0 END")), 'kosong'],
+          [Sequelize.fn('SUM', Sequelize.literal("CASE WHEN status = 'DIBOOKING' THEN 1 ELSE 0 END")), 'booking'],
+          [Sequelize.literal('COUNT(*)'), 'total']
+        ],
+        where: {
+          kd_bangsal: { [Op.in]: kd_bangsal },
+          status: { [Op.in]: ['KOSONG', 'ISI', 'DIBOOKING'] },
+          statusdata: '1'
+        },
+        group: ['kd_bangsal']
+      });
+      let output = datakamar.map(item => {
+        let bangsalObj = kamars.find(k => k.kd_bangsal === item.kd_bangsal);
+        return {
 
-          },
-        });
-        kosong = await kamar.count({
-          where: {
-            kd_bangsal: i.kd_bangsal,
-            status: "KOSONG",
-            statusdata: "1",
-          },
-        });
-        booking = await kamar.count({
-          where: {
-            kd_bangsal: i.kd_bangsal,
-            status: "DIBOOKING",
-            statusdata: "1",
-          },
-        });
-        total = isi + kosong + booking;
-
-        let stts_kamar = {
-          kd_bangsal: i.kd_bangsal,
-          bangsal: i.bangsal.nm_bangsal,
-          isi: isi,
-          kosong: kosong,
-          booking: booking,
-          total: total,
-        }
-        counts.push(stts_kamar);
-      }
-      let sortedData = counts.sort((a, b) => b.isi - a.isi);
+          kd_bangsal: item.kd_bangsal,
+          bangsal: bangsalObj.bangsal.nm_bangsal,
+          ...item.dataValues
+        };
+      });
       return res.status(200).json({
         status: true,
         message: "Stastistik ketersediaan kamar inap",
-        record: counts.length,
-        data: sortedData
+        record: kamars.length,
+        data: output
       });
     } catch (err) {
       console.log(err);
