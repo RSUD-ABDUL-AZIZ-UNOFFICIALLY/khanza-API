@@ -5,8 +5,6 @@ const axios = require('axios');
 const { Op } = require("sequelize");
 const fs = require('fs');
 const sha256 = require('js-sha256');
-const e = require('express');
-const { url } = require('inspector');
 const url_bpjs = process.env.URL_BPJS
 const {
     BPJS_Setujui,
