@@ -9,6 +9,17 @@ module.exports = (sequelize, DataTypes) => {
                 as: 'bridging_surat_kontrol_bpjs',
                 foreignKey: 'no_sep',
             });
+            bridging_sep.hasOne(models.maping_dokter_dpjpvclaim, {
+                as: 'maping_dokter_dpjpvclaim',
+                sourceKey: 'kddpjp',
+                foreignKey: 'kd_dokter_bpjs',
+            });
+            // bridging_sep.hasOne(models.maping_poli_bpjs, {
+            //     as: 'maping_poli_bpjs',
+            //     sourceKey: 'kdpolitujuan',
+            //     foreignKey: 'kd_poli_bpjs',
+            // });
+
         }
     }
     bridging_sep.init({

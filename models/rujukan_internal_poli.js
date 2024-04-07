@@ -21,6 +21,16 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'kd_dokter',
         as: 'dokter'
       });
+      rujukan_internal_poli.hasOne(models.maping_dokter_dpjpvclaim, {
+        foreignKey: 'kd_dokter',
+        sourceKey: 'kd_dokter',
+        as: 'maping_dokter_dpjpvclaim'
+      });
+      rujukan_internal_poli.hasOne(models.maping_poli_bpjs, {
+        foreignKey: 'kd_poli_rs',
+        sourceKey: 'kd_poli',
+        as: 'maping_poli_bpjs'
+      });
     }
 
   }

@@ -26,6 +26,11 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'kd_dokter',
         as: 'dokter'
       });
+      reg_periksa.hasOne(models.maping_dokter_dpjpvclaim, {
+        foreignKey: 'kd_dokter',
+        sourceKey: 'kd_dokter',
+        as: 'maping_dokter_dpjpvclaim'
+      });
       reg_periksa.hasMany(models.kamar_inap, {
         foreignKey: 'no_rawat',
         sourceKey: 'no_rawat',
@@ -35,6 +40,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'kd_poli',
         sourceKey: 'kd_poli',
         as: 'poliklinik'
+      });
+      reg_periksa.hasOne(models.maping_poli_bpjs, {
+        foreignKey: 'kd_poli_rs',
+        sourceKey: 'kd_poli',
+        as: 'maping_poli_bpjs'
       });
       reg_periksa.hasOne(models.penjab, {
         foreignKey: 'kd_pj',
@@ -46,6 +56,7 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'no_rawat',
         as: 'diagnosa_pasien'
       });
+
       
       
       

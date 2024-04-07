@@ -10,6 +10,28 @@ app.use(morgan('dev'));
 app.use(cors());
 
 app.use(express.urlencoded({ extended: true }));
+const { createClient } = require('redis');
+const client = createClient({
+    password: process.env.REDIS_PASSWORD,
+    socket: {
+        host: process.env.REDIS_URL,
+        port: process.env.REDIS_URL_PORT
+    }
+});
+client.connect();
+client.on('connect', () => {
+    console.log('Redis client connected');
+});
+client.on('error', (err) => {
+    console.log('Something went wrong ' + err);
+});
+client.on('end', () => {
+    console.log('Redis client disconnected');
+});
+app.use((req, res, next) => {
+    req.cache = client;
+    next();
+});
 
 const routes = require('./routes/ranap');
 const routesicd = require('./routes/icd');

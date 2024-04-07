@@ -246,7 +246,16 @@ function parsingBangsal(dataKlaim, bangsal) {
     }
     return null;
 }
+function isCaseInsensitiveInclude(mainStr, subStr) {
+    // Mengonversi kedua string menjadi huruf kecil
+    let lowerMainStr = mainStr.toLowerCase();
+    let lowerSubStr = subStr.toLowerCase();
+    // Memeriksa apakah string utama mengandung string yang diinginkan
+    return lowerMainStr.includes(lowerSubStr);
+}
+
 function parsingDPJP(dataKlaim, dpjp, js_dpjp) {
+    ``
     if (dataKlaim.DPJP_INACBG.includes(dpjp)) {
         let jumlah_dpjp = 0;
         let dpjp_ke = 0;
@@ -255,9 +264,28 @@ function parsingDPJP(dataKlaim, dpjp, js_dpjp) {
                 jumlah_dpjp++;
             }
         }
-        if (jumlah_dpjp === 1) {
+        if (isCaseInsensitiveInclude(dataKlaim.dpjp_ranap_bpj, dpjp)) {
             dpjp_ke = 1;
+        } else {
+            dpjp_ke = jumlah_dpjp;
         }
+        let NamaBangsal = "";
+        if (dataKlaim.Bangsal1 != "-") {
+            NamaBangsal += dataKlaim.Bangsal1;
+        }
+        if (dataKlaim.Bangsal2 != "-") {
+            NamaBangsal += ", " + dataKlaim.Bangsal2;
+        }
+        if (dataKlaim.Bangsal3 != "-") {
+            NamaBangsal += ", " + dataKlaim.Bangsal3;
+        }
+        if (dataKlaim.Bangsal4 != "-") {
+            NamaBangsal += ", " + dataKlaim.Bangsal4;
+        }
+        // NamaBangsal = NamaBangsal.replace(/,\s*$/, "");
+        // NamaBangsal = NamaBangsal.replace(/,(\s*-,)*\s*-$/, '');
+        // NamaBangsal = NamaBangsal.replace(/,-\s*$/, '');
+
 
         let dataPasein = {
             noFPK: dataKlaim.noFPK,
@@ -272,6 +300,7 @@ function parsingDPJP(dataKlaim, dpjp, js_dpjp) {
             tglSep: dataKlaim.tglSep,
             tglPulang: dataKlaim.tglPulang,
             lamaInap: dataKlaim.LOS,
+            Bangsal: NamaBangsal,
             dpjp_ranap_RS4: dataKlaim.dpjp_ranap_RS4,
             dpjp_ranap_RS3: dataKlaim.dpjp_ranap_RS3,
             dpjp_ranap_RS2: dataKlaim.dpjp_ranap_RS2,
@@ -286,15 +315,17 @@ function parsingDPJP(dataKlaim, dpjp, js_dpjp) {
             dpjp4: 0,
             js_utama: 0,
             js_raber: 0,
+            dr_DPJP_48: dataKlaim.dr_DPJP_48,
             BEDAH: dataKlaim.BEDAH,
             VENTI: dataKlaim.VENTI,
             CVC: dataKlaim.CVC,
             CDL: dataKlaim.CDL,
             EEG: dataKlaim.EEG,
             CTG: dataKlaim.CTG,
+            "spinal canal": dataKlaim["spinal canal"],
             Biopsi: dataKlaim.Biopsi,
             Bronkoskopi: dataKlaim.Bronkoskopi,
-            dr_DPJP_48: dataKlaim.dr_DPJP_48,
+            curettage: dataKlaim.curettage,
             dr_operator_OK: dataKlaim.dr_operator_OK,
             jumlah_operator: 0,
             dr_operator_OK_ke: 0,
@@ -308,6 +339,28 @@ function parsingDPJP(dataKlaim, dpjp, js_dpjp) {
     }
     return null;
 
+}
+function groupData(array) {
+
+    const uniqueValues = new Set(array);
+
+    // Buat array baru yang berisi hanya nilai yang duplikat
+    const duplicateValues = Array.from(array.filter(item => array.indexOf(item) !== array.lastIndexOf(item)));
+    const countDuplicates = array.reduce((acc, curr) => {
+        acc[curr] = (acc[curr] || 0) + 1;
+        return acc;
+    }, {});
+
+    // Membuat array baru yang berisi nilai yang duplikat dan jumlah kemunculannya
+    const duplicatesWithCount = Object.entries(countDuplicates)
+        .filter(([key, value]) => value >= 1)
+        .map(([key, value]) => ({ value: key, count: value }));
+
+    return {
+        uniqueValues: uniqueValues,
+        duplicateValues: duplicateValues,
+        duplicatesWithCount: duplicatesWithCount
+    };
 }
 
 
@@ -324,6 +377,7 @@ module.exports = {
     penujangRajal,
     tindakanPerawat,
     parsingBangsal,
-    parsingDPJP
+    parsingDPJP,
+    groupData
 
 }
