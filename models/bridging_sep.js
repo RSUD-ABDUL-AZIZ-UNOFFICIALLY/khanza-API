@@ -14,6 +14,11 @@ module.exports = (sequelize, DataTypes) => {
                 sourceKey: 'kddpjp',
                 foreignKey: 'kd_dokter_bpjs',
             });
+            bridging_sep.hasOne(models.pasien, {
+                as: 'pasien',
+                sourceKey: 'nomr',
+                foreignKey: 'no_rkm_medis',
+            });
             // bridging_sep.hasOne(models.maping_poli_bpjs, {
             //     as: 'maping_poli_bpjs',
             //     sourceKey: 'kdpolitujuan',
