@@ -246,6 +246,35 @@ function parsingBangsal(dataKlaim, bangsal) {
     }
     return null;
 }
+function parsingBangsalPending(dataKlaim, bangsal) {
+    let sttKamar = ((dataKlaim.Bangsal1 === bangsal || dataKlaim.Bangsal2 === bangsal || dataKlaim.Bangsal3 === bangsal));
+    if (sttKamar) {
+        let dataPasein = {
+            noFPK: dataKlaim.noFPK,
+            SEP: dataKlaim.noSEP,
+            nama_pasien: dataKlaim.nama_pasien,
+            noMR: dataKlaim.noMR,
+            noBPJS: dataKlaim.noBPJS,
+            kelasRawat: dataKlaim.kelasRawat,
+            tglSep: dataKlaim.tglSep,
+            tglPulang: dataKlaim.tglPulang,
+            bangsal1: dataKlaim.Bangsal1,
+            kamar: dataKlaim.Kamar1,
+            js_pr_inapB1: dataKlaim.Bangsal1 != bangsal ? 0 : dataKlaim.js_pr_inapB1,
+            bangsal2: dataKlaim.Bangsal2,
+            kamar2: dataKlaim.Kamar2,
+            js_pr_inapB2: dataKlaim.Bangsal2 != bangsal ? 0 : dataKlaim.js_pr_inapB2,
+            bangsal3: dataKlaim.Bangsal3,
+            kamar3: dataKlaim.Kamar3,
+            js_pr_inapB3: dataKlaim.Bangsal3 != bangsal ? 0 : dataKlaim.js_pr_inapB3,
+            bangsal4: dataKlaim.Bangsal4,
+            kamar4: dataKlaim.Kamar4,
+            js_pr_inapB4: dataKlaim.Bangsal4 != bangsal ? 0 : dataKlaim.js_pr_inapB4,
+        }
+        return dataPasein;
+    }
+    return null;
+}
 function isCaseInsensitiveInclude(mainStr, subStr) {
     // Mengonversi kedua string menjadi huruf kecil
     let lowerMainStr = mainStr.toLowerCase();
@@ -377,6 +406,7 @@ module.exports = {
     penujangRajal,
     tindakanPerawat,
     parsingBangsal,
+    parsingBangsalPending,
     parsingDPJP,
     groupData
 

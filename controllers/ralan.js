@@ -17,6 +17,7 @@ const {
     penujangRajal,
     tindakanPerawat,
     parsingBangsal,
+    parsingBangsalPending,
     parsingDPJP,
     groupData
 } = require('../helpers/kalkulator');
@@ -1792,7 +1793,7 @@ module.exports = {
                     }
                     dataRanap.push(dataKlaim);
                     for (let key in js_pr) {
-                        let js = parsingBangsal(dataKlaim, key);
+                        let js = parsingBangsalPending(dataKlaim, key);
                         if (js !== null) {
                             js_pr[key].push(js);
                         }
