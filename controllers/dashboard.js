@@ -744,5 +744,63 @@ module.exports = {
         data: err,
       });
     }
+  },
+  getKamarInapbyKelas: async (req, res) => {
+    try {
+      const kamars = await kamar.findAll({
+        attributes: [
+          "kd_bangsal",
+        ],
+        where: {
+          statusdata: "1",
+        },
+        group: ["kd_bangsal"],
+        include: [
+          {
+            model: bangsal,
+            as: "bangsal",
+            attributes: ["nm_bangsal"],
+          },
+        ],
+      });
+      let kd_bangsal = kamars.map(item => item.kd_bangsal);
+      let datakamar = await kamar.findAll({
+        attributes: ['kd_bangsal',
+          [Sequelize.fn('SUM', Sequelize.literal("CASE WHEN status = 'ISI' THEN 1 ELSE 0 END")), 'isi'],
+          [Sequelize.fn('SUM', Sequelize.literal("CASE WHEN status = 'KOSONG' THEN 1 ELSE 0 END")), 'kosong'],
+          [Sequelize.fn('SUM', Sequelize.literal("CASE WHEN status = 'DIBOOKING' THEN 1 ELSE 0 END")), 'booking'],
+          [Sequelize.literal('COUNT(*)'), 'total']
+        ],
+        where: {
+          kd_bangsal: { [Op.in]: kd_bangsal },
+          status: { [Op.in]: ['KOSONG', 'ISI', 'DIBOOKING'] },
+          statusdata: '1',
+          kelas: req.query.kelas
+        },
+        group: ['kd_bangsal']
+      });
+      let output = datakamar.map(item => {
+        let bangsalObj = kamars.find(k => k.kd_bangsal === item.kd_bangsal);
+        return {
+
+          kd_bangsal: item.kd_bangsal,
+          bangsal: bangsalObj.bangsal.nm_bangsal,
+          ...item.dataValues
+        };
+      });
+      return res.status(200).json({
+        status: true,
+        message: "Stastistik ketersediaan kamar inap",
+        // record: kamars.length,
+        data: output
+      });
+    } catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        status: false,
+        message: "Bad Request",
+        data: err,
+      });
+    }
   }
 };

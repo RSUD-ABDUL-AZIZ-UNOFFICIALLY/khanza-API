@@ -11,6 +11,7 @@ routes.get('/tm',middleware.check, ranap.getTglMasuk);
 routes.get('/kamar',middleware.check, ranap.getKamar);
 routes.get('/belumpulang', middleware.check, ranap.getBelumPulang);
 routes.get('/dasboard/belumpulang', middleware.check, dashboard.getKamarInap);
+routes.get('/dasboard/belumpulangbykelas', middleware.check, dashboard.getKamarInapbyKelas);
 
 routes.get('/pemeriksaan', middleware.check, ranap.getPemeriksaan);
 
