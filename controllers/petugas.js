@@ -241,7 +241,7 @@ module.exports = {
                     status: false,
                     message: 'Data pasien tidak ditemukan',
                     data: {
-                        no_rkm_medis: id
+                        no_rkm_medis: rm
                     },
                 });
             }
@@ -268,6 +268,7 @@ module.exports = {
                 data: data,
             });
         } catch (error) {
+            console.log(error);
             return res.status(500).json({
                 status: false,
                 message: 'Internal Server Error',
