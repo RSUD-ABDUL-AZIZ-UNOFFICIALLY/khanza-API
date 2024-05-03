@@ -1,4 +1,4 @@
-const { dokter, petugas, jabatan, pasien, kelurahan, kecamatan, kabupaten, penjab, spesialis } = require('../models');
+const { dokter, petugas, jabatan, pasien, kelurahan, kecamatan, kabupaten, penjab, spesialis, reg_periksa, poliklinik } = require('../models');
 const { Op } = require("sequelize");
 module.exports = {
     getDokter: async (req, res) => {
@@ -311,27 +311,33 @@ module.exports = {
                     },
                 });
             }
-            let data = {
-                no_rkm_medis: dataPasien.no_rkm_medis,
-                nm_pasien: dataPasien.nm_pasien,
-                jk: dataPasien.jk,
-                tgl_lahir: dataPasien.tgl_lahir,
-                alamat: dataPasien.alamat,
-                no_ktp: dataPasien.no_ktp,
-                kelurahan: dataPasien.kelurahan.nm_kel,
-                kecamatan: dataPasien.kecamatan.nm_kec,
-                kabupaten: dataPasien['kabupaten/kota'].nm_kab,
-                no_tlp: dataPasien.no_tlp,
-                pekerjaan: dataPasien.pekerjaan,
-                agama: dataPasien.agama,
-                nm_ibu: dataPasien.nm_ibu,
-                asuransi: dataPasien.penjab.png_jawab,
-                no_peserta: dataPasien.no_peserta,
-            };
+            let kunjungan = await reg_periksa.findAll({
+                where: {
+                    no_rkm_medis: dataPasien.no_rkm_medis
+                },
+                include: [{
+                    model: dokter,
+                    as: 'dokter',
+                    attributes: ['nm_dokter'],
+                }, {
+                    model: penjab,
+                    as: 'penjab',
+                    attributes: ['png_jawab'],
+                },
+                {
+                    model: poliklinik,
+                    as: 'poliklinik',
+                    attributes: ['nm_poli'],
+                }],
+                attributes: ['no_rawat', 'tgl_registrasi', 'status_lanjut', 'umurdaftar'],
+            });
             return res.status(200).json({
                 status: false,
                 message: 'Data pasien',
-                data: data,
+                data: {
+                    dataPasien,
+                    kunjungan
+                },
             });
         } catch (error) {
             return res.status(500).json({
