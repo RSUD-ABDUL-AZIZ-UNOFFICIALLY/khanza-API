@@ -331,11 +331,21 @@ module.exports = {
                 }],
                 attributes: ['no_rawat', 'tgl_registrasi', 'status_lanjut', 'umurdaftar'],
             });
+            // count poliklinik visit
+            let kunjunganVisite = {};
+            kunjungan.forEach((item) => {
+                if (!kunjunganVisite[item.poliklinik.nm_poli]) {
+                    kunjunganVisite[item.poliklinik.nm_poli] = 1;
+                } else {
+                    kunjunganVisite[item.poliklinik.nm_poli] += 1;
+                }
+            });
             return res.status(200).json({
                 status: false,
                 message: 'Data pasien',
                 data: {
                     dataPasien,
+                    kunjunganVisite,
                     kunjungan
                 },
             });
