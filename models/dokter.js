@@ -12,8 +12,19 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       dokter.belongsTo(models.spesialis, {
+        as: 'spesialis',
         foreignKey: 'kd_sps',
         sourceKey: 'kd_sps',
+      });
+      dokter.hasMany(models.jadwal, {
+        as: 'jadwalPraktek',
+        foreignKey: 'kd_dokter',
+        sourceKey: 'kd_dokter',
+      });
+      dokter.hasOne(models.pegawai, {
+        as: 'pegawai',
+        foreignKey: 'nik',
+        sourceKey: 'kd_dokter',
       });
     }
     
@@ -25,7 +36,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     nm_dokter: DataTypes.STRING,
     jk: DataTypes.ENUM('L', 'P'),
-    // tgl_lahir: DataTypes.DATE,
+    status: DataTypes.ENUM('0', '1'),
+    tgl_lahir: DataTypes.DATE,
     no_ijn_praktek: DataTypes.STRING,
     kd_sps: DataTypes.STRING,
 
