@@ -1,5 +1,15 @@
 const { dokter, petugas, pegawai, jabatan, pasien, jadwal, kelurahan, kecamatan, kabupaten, penjab, spesialis, reg_periksa, poliklinik } = require('../models');
 const { Op } = require("sequelize");
+const { apiLPKP } = require('../helpers/api');
+const { createClient } = require('redis');
+const client = createClient({
+    password: process.env.REDIS_PASSWORD,
+    socket: {
+        host: process.env.REDIS_URL,
+        port: process.env.REDIS_URL_PORT
+    }
+});
+
 module.exports = {
     getDokter: async (req, res) => {
         try {
@@ -83,16 +93,11 @@ module.exports = {
     },
     getDokters: async (req, res) => {
         try {
-            const { id } = req.params;
-            // let data = await jadwal.findAll({
-            //     // attributes: ['kd_dokter'],
-            //     group: 'kd_dokter',
-            //     include: [{
-            //         model: dokter,
-            //         as: 'dokter'
-            //     }]
-            // });
-            let data = await dokter.findAll({
+            client.connect();
+            let data = await client.json.get('API-Khnza:drSpesalis', '$');
+            if (data === null) {
+
+                data = await dokter.findAll({
                 attributes: { exclude: ['kd_sps', 'status'] },
                 where: {
                     status: '1'
@@ -136,6 +141,7 @@ module.exports = {
                     nm_dokter: item.nm_dokter,
                     spesialis: item.spesialis.nm_sps,
                     photo: item.pegawai.photo,
+                    no_ktp: item.pegawai.no_ktp,
                     jk: item.jk,
                     no_ijn_praktek: item.no_ijn_praktek,
                     poliklinik: item.jadwalPraktek[0].poliklinik.nm_poli,
@@ -143,6 +149,10 @@ module.exports = {
                 }
             });
 
+                client.json.set('API-Khnza:drSpesalis', '$', data);
+                client.expire('API-Khnza:drSpesalis', 3600 * 24 * 7);
+            }
+            client.quit();
             return res.status(200).json({
                 status: true,
                 message: 'Data Dokter',
