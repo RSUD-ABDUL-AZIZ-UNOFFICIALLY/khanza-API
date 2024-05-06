@@ -1,4 +1,4 @@
-const { dokter, petugas, jabatan, pasien, kelurahan, kecamatan, kabupaten, penjab, spesialis, reg_periksa, poliklinik } = require('../models');
+const { dokter, petugas, pegawai, jabatan, pasien, jadwal, kelurahan, kecamatan, kabupaten, penjab, spesialis, reg_periksa, poliklinik } = require('../models');
 const { Op } = require("sequelize");
 module.exports = {
     getDokter: async (req, res) => {
@@ -74,6 +74,83 @@ module.exports = {
                 // data: data,
             });
         } catch (error) {
+            return res.status(500).json({
+                status: false,
+                message: 'Internal Server Error',
+                data: error,
+            });
+        }
+    },
+    getDokters: async (req, res) => {
+        try {
+            const { id } = req.params;
+            // let data = await jadwal.findAll({
+            //     // attributes: ['kd_dokter'],
+            //     group: 'kd_dokter',
+            //     include: [{
+            //         model: dokter,
+            //         as: 'dokter'
+            //     }]
+            // });
+            let data = await dokter.findAll({
+                attributes: { exclude: ['kd_sps', 'status'] },
+                where: {
+                    status: '1'
+                },
+                include: [{
+                    model: jadwal,
+                    as: 'jadwalPraktek',
+                    separate: true,
+                    attributes: ['hari_kerja', 'jam_mulai', 'jam_selesai'],
+                    include: [{
+                        model: poliklinik,
+                        as: 'poliklinik',
+                        attributes: ['nm_poli'],
+                    }]
+                },
+                {
+                    model: spesialis,
+                    as: 'spesialis',
+                    attributes: ['nm_sps'],
+                },
+                {
+                    model: pegawai,
+                    as: 'pegawai',
+                    attributes: ['no_ktp', 'photo'],
+                }],
+            });
+            // fileter jadwalPraktek null
+            data = data.filter((item) => {
+                return item.jadwalPraktek.length > 0;
+            });
+            data = data.map((item) => {
+                let jadwalPraktek = item.jadwalPraktek.map((jadwal) => {
+                    return {
+                        hari_kerja: jadwal.hari_kerja,
+                        jam_mulai: jadwal.jam_mulai,
+                        jam_selesai: jadwal.jam_selesai,
+                    }
+                });
+                return {
+                    kd_dokter: item.kd_dokter,
+                    nm_dokter: item.nm_dokter,
+                    spesialis: item.spesialis.nm_sps,
+                    photo: item.pegawai.photo,
+                    jk: item.jk,
+                    no_ijn_praktek: item.no_ijn_praktek,
+                    poliklinik: item.jadwalPraktek[0].poliklinik.nm_poli,
+                    jadwalPraktek: jadwalPraktek,
+                }
+            });
+
+            return res.status(200).json({
+                status: true,
+                message: 'Data Dokter',
+                data: data,
+                // data: data,
+            });
+        } catch (error) {
+            console.log(error);
             return res.status(500).json({
                 status: false,
                 message: 'Internal Server Error',

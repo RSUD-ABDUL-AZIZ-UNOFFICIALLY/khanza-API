@@ -13,6 +13,8 @@ module.exports = (sequelize, DataTypes) => {
             jadwal.belongsTo(models.dokter, {
                 as: 'dokter',
                 foreignKey: 'kd_dokter',
+                sourceKey: 'kd_dokter'
+
             });
             jadwal.belongsTo(models.poliklinik, {
                 as: 'poliklinik',
