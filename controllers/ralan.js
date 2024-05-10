@@ -574,7 +574,7 @@ module.exports = {
             if (param.pelayanan == 1) {
                 let filename = 'Ranap_' + token + '.json'
                 let dataRanap = [];
-                const fileContent = fs.readFileSync('controllers/inacbg/inacbg_okt2023.json', 'utf-8');
+                const fileContent = fs.readFileSync('controllers/inacbg/' + param.dataINACBG, 'utf-8');
                 let inacbg = JSON.parse(fileContent);
                 for (const element of klaim) {
                     let dataSEP = await bridging_sep.findOne({
@@ -862,11 +862,13 @@ module.exports = {
             if (param.pelayanan == 2) {
                 let dataSEP = klaim.map(item => item.noSEP);
 
-                let sepSIMRS = await req.cache.json.get(`data:monitoring:klaim:${param.from}:${param.until}:SEP`, '$');
+                // let sepSIMRS = await req.cache.json.get(`data:monitoring:klaim:${param.from}:${param.until}:SEP`, '$');
+                let sepSIMRS = null;
                 if (sepSIMRS == null) {
                     sepSIMRS = await bridging_sep.findAll({
                         where: {
                             no_sep: dataSEP,
+                            jnspelayanan: '2',
                         },
                         include: [{
                             model: maping_dokter_dpjpvclaim,
@@ -874,13 +876,21 @@ module.exports = {
                             attributes: ['nm_dokter_bpjs', 'kd_dokter_bpjs'],
                         }],
                         attributes: ['no_rawat', 'no_sep', 'nomr', 'tanggal_lahir', 'nmdiagnosaawal', 'nmdpdjp', 'kddpjp', 'kdpolitujuan', 'nmpolitujuan'],
-                    });
-                    sepSIMRS.forEach(obj => {
-                        obj.nmdpdjp = obj.maping_dokter_dpjpvclaim.nm_dokter_bpjs; // Update name property
-                        delete obj.maping_dokter_dpjpvclaim; // Remove newName property
-                    });
-                    req.cache.json.set(`data:monitoring:klaim:${param.from}:${param.until}:SEP`, '$', sepSIMRS);
-                    req.cache.expire(`data:monitoring:klaim:${param.from}:${param.until}:SEP`, 60 * 60);
+                    })
+                    // sepSIMRS.forEach(obj => {
+                    //     obj.nmdpdjp = obj.maping_dokter_dpjpvclaim.nm_dokter_bpjs; // Update name property
+                    //     delete obj.maping_dokter_dpjpvclaim; // Remove newName property
+
+                    // // });
+                    for (const element of sepSIMRS) {
+
+                        if (element.maping_dokter_dpjpvclaim != null) {
+                            element.nmdpdjp = element.maping_dokter_dpjpvclaim.nm_dokter_bpjs;
+                            delete element.maping_dokter_dpjpvclaim;
+                        }
+                    }
+                    // req.cache.json.set(`data:monitoring:klaim:${param.from}:${param.until}:SEP`, '$', sepSIMRS);
+                    // req.cache.expire(`data:monitoring:klaim:${param.from}:${param.until}:SEP`, 60 * 60);
                 }
 
                 let dataSEPSIMRS = sepSIMRS.map(item => item.no_sep);
@@ -889,7 +899,8 @@ module.exports = {
                     let tidakDitemukan = klaim.filter(item => !dataSEPSIMRS.includes(item.noSEP));
                     let dataNorm = tidakDitemukan.map(item => item.peserta.noMR);
                     let tglReg = tidakDitemukan.map(item => item.tglSep);
-                    let dataReg = await req.cache.json.get(`data:monitoring:klaim:${param.from}:${param.until}:dataReg`, '$');
+                    // let dataReg = await req.cache.json.get(`data:monitoring:klaim:${param.from}:${param.until}:dataReg`, '$');
+                    let dataReg = null;
                     if (dataReg == null) {
                         dataReg = await reg_periksa.findAll({
                             where: {
@@ -911,12 +922,13 @@ module.exports = {
                             }],
                             attributes: ['no_rawat', 'tgl_registrasi', 'no_rkm_medis', 'kd_poli', 'kd_dokter'],
                         });
-                        req.cache.json.set(`data:monitoring:klaim:${param.from}:${param.until}:dataReg`, '$', dataReg);
-                        req.cache.expire(`data:monitoring:klaim:${param.from}:${param.until}:dataReg`, 60 * 60);
+                        // req.cache.json.set(`data:monitoring:klaim:${param.from}:${param.until}:dataReg`, '$', dataReg);
+                        // req.cache.expire(`data:monitoring:klaim:${param.from}:${param.until}:dataReg`, 60 * 60);
                     }
 
                     let dataKlaim = [];
                     for (const element of tidakDitemukan) {
+                        try {
                         let data = {
                             no_rawat: dataReg.find(item => item.pasien.no_peserta == element.peserta.noKartu).no_rawat,
                             no_sep: element.noSEP,
@@ -929,6 +941,10 @@ module.exports = {
                             nmpolitujuan: dataReg.find(item => item.pasien.no_peserta == element.peserta.noKartu).maping_poli_bpjs.nm_poli_bpjs,
                         }
                         dataKlaim.push(data);
+                        } catch (err) {
+                            console.log(element.peserta.noKartu);
+                            console.log(err);
+                        }
                     }
                     sepSIMRS = sepSIMRS.concat(dataKlaim);
                 }
@@ -990,6 +1006,7 @@ module.exports = {
                             jasaDPJPPenujang = Math.round(data_penujangRajal.dokter_48 / (jumlahDPJP.count + 1));
                         }
                         for (let i = 0; i < DPJP.length; i++) {
+                            try {
                             if (i == 0) {
                                 raberDPJP += DPJP[i].maping_dokter_dpjpvclaim.nm_dokter_bpjs;
                                 raberPoli += DPJP[i].maping_poli_bpjs.nm_poli_bpjs;
@@ -998,7 +1015,7 @@ module.exports = {
                                 raberPoli += ', ' + DPJP[i].maping_poli_bpjs.nm_poli_bpjs;
                             }
 
-                            try {
+
 
                                 let dataDpjpRaber = {
                                     noFPK: element.noFPK,
@@ -1124,7 +1141,7 @@ module.exports = {
             }
 
             // ranap
-            if (param.pelayanan == 1) {
+            if (param.pelayanan == 11) {
                 let filename = 'Ranap_' + token + '.json'
                 let dataRanap = [];
                 let datanoFPK = [];
@@ -1179,7 +1196,7 @@ module.exports = {
                     YUNITA: [],
                     ZAINUL: []
                 };
-                const fileContent = fs.readFileSync('controllers/inacbg/nov2023-03-04-2024.json', 'utf-8');
+                const fileContent = fs.readFileSync('controllers/inacbg/' + param.dataINACBG, 'utf-8');
                 let inacbg = JSON.parse(fileContent);
                 for (const element of klaim) {
                     let dataSEP = await req.cache.json.get(`data:bridging_sep:${element.noSEP}`, '$');
@@ -1198,9 +1215,6 @@ module.exports = {
                         console.log(element.noSEP);
                         let getDataSEP = await axios.get(url_bpjs + '/api/bpjs/sep?noSEP=' + element.noSEP);
                         getDataSEP = getDataSEP.data.response;
-                        if (getDataSEP.peserta.noMr == "534579") {
-                            getDataSEP.peserta.noMr = "534021"
-                        }
                         let get_reg = await req.cache.json.get(`data:reg_periksa:${getDataSEP.tglSep}:${getDataSEP.peserta.noMr}`, '$');
                         if (get_reg == null) {
                             get_reg = await reg_periksa.findOne({
@@ -1267,6 +1281,7 @@ module.exports = {
                         element.dataSEP.nm_dokter = maping.dokter.nm_dokter;
                     }
                     let lastKamar = await req.cache.json.get(`data:lastKamar:${dataSEP.no_rawat}`, '$');
+                    console.log(dataSEP.no_rawat);
                     if (lastKamar == null) {
                         lastKamar = await kamar_inap.findAll({
                         where: {
@@ -1326,8 +1341,13 @@ module.exports = {
                     }
                     element.dpjp_ranap = dpjp.length;
                     element.data_dpjp_ranap = dpjp;
-                    let prolis = inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST;
-                    let DIAGLIST = inacbg.find(obj => obj.SEP === element.noSEP).DIAGLIST;
+                    console.log(element.noSEP);
+                    let prolis = '';
+                    let DIAGLIST = '';
+                    if (inacbg.find(obj => obj.SEP === element.noSEP)) {
+                        prolis = inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST;
+                        DIAGLIST = inacbg.find(obj => obj.SEP === element.noSEP).DIAGLIST;
+                    }
 
                     let igd = (element.reg_maksuk.poliklinik.nm_poli == 'IGD') ? true : false;
                     let hemo = (findProlist(prolis, '39.95') || findProlist(prolis, '38.93') || findProlist(prolis, '38.95')) ? true : false;
@@ -1509,6 +1529,350 @@ module.exports = {
                 });
             }
 
+            if (param.pelayanan == 1) {
+                let dataSEP_FPK = klaim.map(item => item.noSEP);
+                let dataSEP_SIMRS = await bridging_sep.findAll({
+                    where: {
+                        no_sep: dataSEP_FPK,
+                        jnspelayanan: '1'
+                    },
+                    attributes: ['no_rawat', 'nomr', 'no_sep', 'nmdiagnosaawal', 'kddpjp', 'nmdpdjp'],
+                });
+                if (dataSEP_FPK.length != dataSEP_SIMRS.length) {
+                    let dataSEP_backdate = dataSEP_FPK.filter(item => !dataSEP_SIMRS.find(x => x.no_sep === item));
+                    let dataSEP_briging = [];
+                    for (const element of dataSEP_backdate) {
+                        let getDataSEP = await axios.get(url_bpjs + '/api/bpjs/sep?noSEP=' + element);
+                        // getDataSEP = getDataSEP.;
+                        dataSEP_briging.push(getDataSEP.data.response);
+                    }
+                    let dataRM = dataSEP_briging.map(item => item.peserta.noMr)
+                    let tglRawat = dataSEP_briging.map(item => item.tglSep)
+                    let reg_maksuk = await reg_periksa.findAll({
+                        where: {
+                            tgl_registrasi: tglRawat,
+                            no_rkm_medis: dataRM
+                        },
+                        attributes: ['no_rawat', 'tgl_registrasi', 'no_rkm_medis']
+                    });
+                    for (const element of dataSEP_briging) {
+                        element.no_rawat = reg_maksuk.find(item => item.no_rkm_medis === element.peserta.noMr).no_rawat;
+                    }
+
+                    let noRegSEP_SIMRS = dataSEP_SIMRS.map(item => item.no_rawat);
+                    let noRegSEP_briging = dataSEP_briging.map(item => item.no_rawat);
+                    noRegSEP_SIMRS = noRegSEP_SIMRS.concat(noRegSEP_briging);
+                    let reg_masuk_poli = await reg_periksa.findAll({
+                        where: {
+                            no_rawat: noRegSEP_SIMRS,
+                        },
+                        include: [{
+                            model: poliklinik,
+                            as: 'poliklinik',
+                            attributes: ['nm_poli']
+                        }],
+                        attributes: ['no_rawat', 'tgl_registrasi', 'no_rkm_medis', 'kd_poli'],
+                    });
+                    for (const element of dataSEP_briging) {
+                        // console.log(element);
+                        element.poliklinik = reg_masuk_poli.find(item => item.no_rawat === element.no_rawat).poliklinik.nm_poli;
+                    }
+                    for (const element of dataSEP_SIMRS) {
+
+                        element.dataValues.poliklinik = reg_masuk_poli.find(item => item.no_rawat === element.no_rawat).poliklinik.nm_poli;
+                    }
+                    let lastKamars = await kamar_inap.findAll({
+                        where: {
+                            no_rawat: noRegSEP_SIMRS,
+                        },
+                        include: [{
+                            model: kamar,
+                            as: 'kode_kamar',
+                            attributes: ['kelas'],
+                            include: [{
+                                model: bangsal,
+                                as: 'bangsal',
+                                attributes: ['nm_bangsal']
+                            }]
+                        }],
+                        attributes: ['no_rawat', 'kd_kamar', 'tgl_masuk', 'tgl_keluar', 'stts_pulang', 'lama'],
+                    });
+
+
+                    const fileContent = fs.readFileSync('controllers/inacbg/' + param.dataINACBG, 'utf-8');
+                    let inacbg = JSON.parse(fileContent);
+                    let dataRanap = [];
+                    let datanoFPK = [];
+                    let lostSEP = [];
+                    let js_pr = {
+                        "Bangsal Anak": [],
+                        "Bangsal Bedah": [],
+                        "Bangsal Isolasi Utama": [],
+                        "Bangsal ICU": [],
+                        "Bangsal Kelas 1 B": [],
+                        "Bangsal Kelas 1 C": [],
+                        "Bangsal Nifas": [],
+                        "Bangsal Penyakit Dalam": [],
+                        "Bangsal Perinatologi": [],
+                        "Bangsal Saraf": [],
+                        "Bangsal VIP": [],
+                        "Bangsal VK": [],
+                        "Bangsal VK Bayi Sehat": [],
+                    };
+
+
+                    let js_dpjp = {
+                        AGUSTINUS: [],
+                        ALFONS: [],
+                        "ARI ": [],
+                        BORIS: [],
+                        DAVIS: [],
+                        DIANA: [],
+                        DJOKO: [],
+                        ESTU: [],
+                        FENNY: [],
+                        FREDDY: [],
+                        HANARTO: [],
+                        HARTONO: [],
+                        HERLING: [],
+                        HERISA: [],
+                        MARKUS: [],
+                        MARSITA: [],
+                        MUDIB: [],
+                        MUSLIM: [],
+                        MARIA: [],
+                        NOVI: [],
+                        RAHMAD: [],
+                        RACHIM: [],
+                        RADHITIO: [],
+                        SONNY: [],
+                        STEVIE: [],
+                        TEGUH: [],
+                        TOGU: [],
+                        URAY: [],
+                        UNDARI: [],
+                        VIVI: [],
+                        YUNITA: [],
+                        ZAINUL: []
+                    };
+                    // return res.status(200).json({
+                    //     status: false,
+                    //     message: 'tidak Seimbang',
+                    //     klaim,
+                    // });
+                    for (const element of klaim) {
+                        if (dataSEP_SIMRS.find(obj => obj.no_sep === element.noSEP) == undefined) {
+                            element.dataSEP_SIMRS = dataSEP_briging.find(obj => obj.noSep === element.noSEP);
+                        } else {
+                            element.dataSEP_SIMRS = dataSEP_SIMRS.find(obj => obj.no_sep === element.noSEP);
+                        }
+                        if (inacbg.find(obj => obj.SEP === element.noSEP) != undefined) {
+
+                            let prolis = inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST;
+                            let DIAGLIST = inacbg.find(obj => obj.SEP === element.noSEP).DIAGLIST;
+                            let poli
+                            if (element.dataSEP_SIMRS.poliklinik == undefined) {
+                                poli = element.dataSEP_SIMRS.dataValues.poliklinik;
+                            } else {
+                                poli = element.dataSEP_SIMRS.poliklinik
+                            }
+                            console.log(poli);
+                            let igd = (element.dataSEP_SIMRS.poliklinik == 'IGD') ? true : false;
+                            let hemo = (findProlist(prolis, '39.95') || findProlist(prolis, '38.93') || findProlist(prolis, '38.95')) ? true : false;
+                            let venti = (findProlist(prolis, '96.72') || findProlist(prolis, '96.71')) ? true : false;
+                            let bedah = inacbg.find(obj => obj.SEP === element.noSEP).PROSEDUR_BEDAH > 0 ? true : false;
+                            let bagi_rs = BPJS_Setujui(parseInt(element.biaya.bySetujui));
+                            let duit_formasi = formasi(bagi_rs.Jasa_pelayanan, venti, bedah);
+                            let bagi_penujang = penujang(duit_formasi.bangsal, igd, bedah);
+                            let bagi_tindakanPerawat = tindakanPerawat(bagi_penujang.tindakan2persen, prolis)
+                            let sisa2 = Math.round(bagi_penujang.tindakan2persen - bagi_tindakanPerawat.tindakan_usg - bagi_tindakanPerawat.fisioterapi - bagi_tindakanPerawat.EKG - bagi_tindakanPerawat.GDS - bagi_tindakanPerawat.USG);
+                            let bagi_medis = medis(bagi_penujang.sisa, hemo);
+                            let duit_oka = OKA(duit_formasi.bedah);
+                            let duit_ventilator = ventilator(duit_formasi.venti);
+                            let lastKamar = lastKamars.filter(obj => obj.no_rawat === element.dataSEP_SIMRS.no_rawat);
+                            let lamaInapB1 = lastKamar[0] ? lastKamar[0].lama : 0;
+                            let lamaInapB2 = lastKamar[1] ? lastKamar[1].lama : 0;
+                            let lamaInapB3 = lastKamar[2] ? lastKamar[2].lama : 0;
+                            let lamaInapB4 = lastKamar[3] ? lastKamar[3].lama : 0;
+                            let lamaInap = lamaInapB1 + lamaInapB2 + lamaInapB3 + lamaInapB4;
+                            let js_pr_inapB1 = Math.round(lamaInapB1 / lamaInap * bagi_medis.pr_ruangan);
+                            let js_pr_inapB2 = Math.round(lamaInapB2 / lamaInap * bagi_medis.pr_ruangan);
+                            let js_pr_inapB3 = Math.round(lamaInapB3 / lamaInap * bagi_medis.pr_ruangan);
+                            let js_pr_inapB4 = Math.round(lamaInapB4 / lamaInap * bagi_medis.pr_ruangan);
+                            // console.log(lastKamar[0]);
+                            // console.log(element.dataSEP_SIMRS.no_rawat);
+                            // console.log(element);
+                            let dpjp_ranap_bpj = '';
+                            if (element.dataSEP_SIMRS.nmdpdjp == undefined) {
+                                dpjp_ranap_bpj = element.dataSEP_SIMRS.kontrol.nmDokter
+                            } else {
+                                dpjp_ranap_bpj = element.dataSEP_SIMRS.nmdpdjp
+                            }
+
+                            let dataKlaim
+                            dataKlaim = {
+                                noFPK: element.noFPK,
+                                SEP: inacbg.find(obj => obj.SEP === element.noSEP).SEP,
+                                nama_pasien: element.peserta.nama,
+                                noMR: element.peserta.noMr,
+                                noBPJS: element.peserta.noKartu,
+                                kelasRawat: element.kelasRawat,
+                                tglSep: element.tglSep,
+                                tglPulang: element.tglPulang,
+                                kode_inacbg_bpjs: element.Inacbg.kode,
+                                nama_inacbg_bpjs: element.Inacbg.nama,
+                                TOTAL_TARIF: inacbg.find(obj => obj.SEP === element.noSEP).TOTAL_TARIF,
+                                TARIF_RS: element.biaya.byTarifRS,
+                                TARIF_BPJS: parseInt(element.biaya.bySetujui),
+                                TARIF_PROSEDUR_BEDAH: inacbg.find(obj => obj.SEP === element.noSEP).PROSEDUR_BEDAH,
+                                LOS: inacbg.find(obj => obj.SEP === element.noSEP).LOS,
+                                ICU_INDIKATOR: inacbg.find(obj => obj.SEP === element.noSEP).ICU_INDIKATOR,
+                                ICU_LOS: inacbg.find(obj => obj.SEP === element.noSEP).ICU_LOS,
+                                VENT_HOUR: inacbg.find(obj => obj.SEP === element.noSEP).VENT_HOUR,
+                                jalurMasuk: poli,
+                                Kamar1: lastKamar[0].kd_kamar + ' - stts_pulang: ' + lastKamar[0].stts_pulang + ' - ' + lastKamar[0].lama + ' hari',
+                                Bangsal1: lastKamar[0].kode_kamar.bangsal.nm_bangsal,
+                                js_pr_inapB1: js_pr_inapB1,
+                                Kamar2: lastKamar[1] ? lastKamar[1].kd_kamar + ' - stts_pulang: ' + lastKamar[1].stts_pulang + ' - ' + lastKamar[1].lama + ' hari' : '-',
+                                Bangsal2: lastKamar[1] ? lastKamar[1].kode_kamar.bangsal.nm_bangsal : '-',
+                                js_pr_inapB2: js_pr_inapB2,
+                                Kamar3: lastKamar[2] ? lastKamar[2].kd_kamar + ' - stts_pulang: ' + lastKamar[2].stts_pulang + ' - ' + lastKamar[2].lama + ' hari' : '-',
+                                Bangsal3: lastKamar[2] ? lastKamar[2].kode_kamar.bangsal.nm_bangsal : '-',
+                                js_pr_inapB3: js_pr_inapB3,
+                                Kamar4: lastKamar[3] ? lastKamar[3].kd_kamar + ' - stts_pulang: ' + lastKamar[3].stts_pulang + ' - ' + lastKamar[3].lama + ' hari' : '-',
+                                Bangsal4: lastKamar[3] ? lastKamar[3].kode_kamar.bangsal.nm_bangsal : '-',
+                                js_pr_inapB4: js_pr_inapB4,
+                                DESKRIPSI_INACBG: inacbg.find(obj => obj.SEP === element.noSEP).DESKRIPSI_INACBG,
+                                DIAGLIST: String(DIAGLIST),
+                                PROCLIST: String(prolis),
+                                DPJP_INACBG: inacbg.find(obj => obj.SEP === element.noSEP).DPJP,
+                                dpjp_ranap_bpj: dpjp_ranap_bpj,
+                                dpjp_ranap_RS1: '-',
+                                dpjp_ranap_RS2: '-',
+                                dpjp_ranap_RS3: '-',
+                                dpjp_ranap_RS4: '-',
+                                ventilation_more96: findProlist(inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST, '96.72') ? "Y" : "N",
+                                ventilation_less96: findProlist(inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST, '96.71') ? "Y" : "N",
+                                endotracheal_intubasi: findProlist(inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST, '96.04') ? "Y" : "N",
+                                IGD: igd ? "Y" : "N",
+                                VENTI: venti ? "Y" : "N",
+                                BEDAH: bedah ? "Y" : "N",
+                                CVC: findProlist(inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST, '38.93') ? "Y" : "N",
+                                CDL: findProlist(inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST, '38.95') ? "Y" : "N",
+                                Bronkoskopi: findProlist(inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST, '33.23') ? "Y" : "N",
+                                EEG: findProlist(inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST, '89.14') ? "Y" : "N",
+                                CTG: findProlist(inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST, '75.32') ? "Y" : "N",
+                                Biopsi: findProlist(inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST, '45.15') ? "Y" : "N",
+                                "spinal canal": findProlist(inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST, '03.92') ? "Y" : "N",
+                                curettage: findProlist(inacbg.find(obj => obj.SEP === element.noSEP).PROCLIST, '69.09') ? "Y" : "N",
+                                tindakan_usg: bagi_tindakanPerawat.tindakan_usg,
+                                Jasa_sarana: bagi_rs.Jasa_sarana,
+                                Jasa_pelayanan: bagi_rs.Jasa_pelayanan,
+                                formasi_bangsal: duit_formasi.bangsal,
+                                bcu: bagi_penujang.bcu,
+                                "tindakan2%": bagi_penujang.tindakan2persen,
+                                fisio: bagi_tindakanPerawat.fisioterapi,
+                                ekg: Math.round(bagi_tindakanPerawat.EKG),
+                                gds: Math.round(bagi_tindakanPerawat.GDS),
+                                usg: Math.round(bagi_tindakanPerawat.USG),
+                                "sisa2%": sisa2,
+                                struktural: bagi_penujang.BJP_strutural,
+                                lab: bagi_penujang.lab,
+                                mikro: bagi_penujang.mkro,
+                                farmasi: bagi_penujang.farmasi,
+                                radiologi: bagi_penujang.radiologi,
+                                drIGD: bagi_penujang.drIGD,
+                                pr_igd: bagi_penujang.pr_igd,
+                                dikurangi: bagi_penujang.sisa,
+                                dr_DPJP_48: bagi_medis.dr_DPJP_48,
+                                pr_31: bagi_medis.pr_31,
+                                pr_ruangan: bagi_medis.pr_ruangan,
+                                hemo: bagi_medis.hemodialisa,
+                                managemnt_21: bagi_medis.mm_21,
+                                formasi_bedah: duit_formasi.bedah,
+                                dpjp_oka_60: duit_oka.dpjp_OK,
+                                dr_operator_OK: duit_oka.dr_operator_OK,
+                                pr_operator_OK: duit_oka.pr_operator_OK,
+                                cssd: duit_oka.cssd,
+                                anestesi_35: duit_oka.anestsi_OK,
+                                dr_anestesi_OK: duit_oka.dr_anestesi,
+                                formasi_venti: duit_formasi.venti,
+                                dr_anestesi_venti: duit_ventilator.dr_anestesi,
+                                pr_venti: duit_ventilator.pr_ventilator,
+                                dr_ventilator: duit_ventilator.dr_ventilator
+                            }
+                            dataRanap.push(dataKlaim);
+                            if (datanoFPK.find(obj => obj.noFPK === element.noFPK)) {
+                                let foundObject = datanoFPK.find(obj => obj.noFPK === element.noFPK)
+                                if (foundObject) {
+                                    foundObject.byTarifRS += parseInt(element.biaya.byTarifRS);
+                                    foundObject.bySetujui += parseInt(element.biaya.bySetujui);
+                                    foundObject.count++
+                                }
+                            } else {
+                                let newObj = { noFPK: element.noFPK, bySetujui: parseInt(element.biaya.bySetujui), byTarifRS: parseInt(element.biaya.byTarifRS), count: 1 };
+                                datanoFPK.push(newObj)
+
+                            }
+                            for (let key in js_pr) {
+                                let js = parsingBangsal(dataKlaim, key);
+                                if (js !== null) {
+                                    js_pr[key].push(js);
+                                }
+                            }
+
+
+                            for (let key in js_dpjp) {
+                                let js = parsingDPJP(dataKlaim, key, js_dpjp);
+                                if (js !== null) {
+                                    js_dpjp[key].push(js);
+                                }
+                            }
+                        } else {
+                            // console.log(element.noSEP);
+                            lostSEP.push(element.noSEP);
+                        }
+                    }
+                    try {
+                        let filename = 'Ranap_' + token + '.json'
+                        for (let key in js_pr) {
+                            fs.writeFileSync('./cache/bangsal/' + key + ".json", JSON.stringify(js_pr[key]));
+                        }
+                        for (let key in js_dpjp) {
+                            fs.writeFileSync('./cache/dpjp/' + key + ".json", JSON.stringify(js_dpjp[key]));
+                        }
+                        fs.writeFileSync('./cache/' + "bangsal.json", JSON.stringify(js_pr));
+                        fs.writeFileSync('./cache/' + "dpjp.json", JSON.stringify(js_dpjp));
+                        fs.writeFileSync('./cache/' + "raw.json", JSON.stringify({ repot: datanoFPK, raw: dataRanap }));
+                        fs.writeFileSync('./cache/' + "repot.json", JSON.stringify(datanoFPK));
+                        fs.writeFileSync('./cache/' + filename, JSON.stringify(dataRanap));
+                        fs.writeFile('./cache/' + filename, JSON.stringify(dataRanap), (err, dataRalan) => {
+                            if (err) {
+                                console.log("File read failed:", err);
+                                return;
+                            }
+                        });
+                    } catch (error) {
+                        return res.status(500).json({
+                            status: false,
+                            message: 'error',
+                            data: error.message
+                        });
+                    }
+
+                    return res.status(200).json({
+                        status: false,
+                        message: 'tidak Seimbang',
+                        record: {
+                            selisih: dataSEP_briging.length,
+                            FPK: dataSEP_FPK.length,
+                            dataSEP_SIMRS: dataSEP_SIMRS.length,
+                            noRegSEP_SIMRS: noRegSEP_SIMRS.length,
+                            lostSEP: lostSEP
+                        },
+                    });
+                }
+            }
             return res.status(200).json({
                 status: true,
                 message: 'Data klaim Ranap',
