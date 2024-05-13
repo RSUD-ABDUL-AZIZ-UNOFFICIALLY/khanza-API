@@ -284,7 +284,6 @@ function isCaseInsensitiveInclude(mainStr, subStr) {
 }
 
 function parsingDPJP(dataKlaim, dpjp, js_dpjp) {
-    ``
     if (dataKlaim.DPJP_INACBG.includes(dpjp)) {
         let jumlah_dpjp = 0;
         let dpjp_ke = 0;
