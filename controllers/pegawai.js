@@ -96,7 +96,23 @@ module.exports = {
     },
     copyHakAkses: async (req, res) => {
         let { fromUser, toUser } = req.body
+        try {
         let user = await findUser(fromUser);
+            if (!user) {
+                return res.status(404).json({
+                    status: false,
+                    message: 'fromUser tidak ditemukan',
+                    data: null,
+                });
+            }
+            let userTo = await findUser(toUser);
+            if (!userTo) {
+                return res.status(400).json({
+                    status: false,
+                    message: 'toUser sudah tidak di temukan',
+                    data: null,
+                });
+            }
         // remove id_user, password
         delete user.id_user;
         delete user.password;
@@ -120,8 +136,14 @@ module.exports = {
                 total: akses
             },
             data: listPermit
-
         });
+        } catch (error) {
+            return res.status(500).json({
+                status: false,
+                message: 'Internal Server Error',
+                data: error.message,
+            });
+        }
     },
     cariPegawai: async (req, res) => {
         let search = req.query.search;
