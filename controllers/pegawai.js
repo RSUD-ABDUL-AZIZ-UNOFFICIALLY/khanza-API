@@ -94,6 +94,35 @@ module.exports = {
             data: user,
         });
     },
+    copyHakAkses: async (req, res) => {
+        let { fromUser, toUser } = req.body
+        let user = await findUser(fromUser);
+        // remove id_user, password
+        delete user.id_user;
+        delete user.password;
+        let akses = 0;
+        let permit = 0;
+        let listPermit = [];
+        for (let key in user) {
+            akses++;
+            if (user[key] == 'true') {
+                permit++;
+                listPermit.push(key);
+                updateHakAses(toUser, key, user[key]);
+            }
+        }
+
+        return res.status(200).json({
+            status: true,
+            message: 'Hak Asses di dari ' + fromUser + ' ke ' + toUser + ' berhasil di copy',
+            record: {
+                privilege: permit,
+                total: akses
+            },
+            data: listPermit
+
+        });
+    },
     cariPegawai: async (req, res) => {
         let search = req.query.search;
         let limit = parseInt(req.query.limit) || 10;
