@@ -124,8 +124,8 @@ module.exports = {
             if (user[key] == 'true') {
                 permit++;
                 listPermit.push(key);
-                updateHakAses(toUser, key, user[key]);
             }
+            updateHakAses(toUser, key, user[key]);
         }
 
         return res.status(200).json({
