@@ -1916,6 +1916,19 @@ module.exports = {
                 }
                 groupdataFPK.push(data);
             }
+            for (let e of klaim) {
+                // convert to number
+                e.biaya.bySetujui = parseInt(e.biaya.bySetujui);
+                e.biaya.byTarifGruper = parseInt(e.biaya.byTarifGruper);
+                e.biaya.byTarifRS = parseInt(e.biaya.byTarifRS);
+            }
+            if (param.dataINACBG == undefined) {
+                return res.status(200).json({
+                    dataFPK: groupdataFPK,
+                    Klaim: klaim
+
+                });
+            }
 
             const fileContent = fs.readFileSync('controllers/inacbg/' + param.dataINACBG, 'utf-8');
             let inacbg = JSON.parse(fileContent);
