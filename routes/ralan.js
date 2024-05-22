@@ -18,6 +18,7 @@ routes.get('/pemeriksaan', middleware.check, ralan.getPemeriksaan);
 routes.post('/pemeriksaan', middleware.check, ralan.postPemeriksaan);
 routes.get('/jasaruangan', ralan.getJasaRuangan);
 routes.get('/getJasaDrRanap', ralan.getJasaDrRanap);
+routes.get('/RAW', ralan.RAW);
 routes.get('/monitoring/jasa', ralan.monitoringJasa);
 
 

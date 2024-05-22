@@ -1,3 +1,5 @@
+const e = require("express");
+
 function BPJS_Setujui(duit) {
     let Jasa_sarana = 65 / 100 * duit;
     let Jasa_pelayanan = 35 / 100 * duit;
@@ -276,6 +278,10 @@ function parsingBangsalPending(dataKlaim, bangsal) {
     return null;
 }
 function isCaseInsensitiveInclude(mainStr, subStr) {
+
+    if (mainStr === null || subStr === null) {
+        return false;
+    }
     // Mengonversi kedua string menjadi huruf kecil
     let lowerMainStr = mainStr.toLowerCase();
     let lowerSubStr = subStr.toLowerCase();
@@ -292,6 +298,7 @@ function parsingDPJP(dataKlaim, dpjp, js_dpjp) {
                 jumlah_dpjp++;
             }
         }
+
         if (isCaseInsensitiveInclude(dataKlaim.dpjp_ranap_bpj, dpjp)) {
             dpjp_ke = 1;
         } else {
@@ -310,9 +317,50 @@ function parsingDPJP(dataKlaim, dpjp, js_dpjp) {
         if (dataKlaim.Bangsal4 != "-") {
             NamaBangsal += ", " + dataKlaim.Bangsal4;
         }
-        // NamaBangsal = NamaBangsal.replace(/,\s*$/, "");
-        // NamaBangsal = NamaBangsal.replace(/,(\s*-,)*\s*-$/, '');
-        // NamaBangsal = NamaBangsal.replace(/,-\s*$/, '');
+        let dpjp1 = 0;
+        let dpjp2 = 0;
+        let dpjp3 = 0;
+        let dpjp4 = 0;
+        let js_utama = 0;
+        let js_raber = 0;
+        // =IF(T2=1,100%*AB2,IF(T2=2,60%*AB2,IF(T2=3,43.34%*AB2,IF(T2=4,35.02%*AB2,0))))
+        // =IF(T2=1,0%*AB2,IF(T2=2,40%*AB2,IF(T2=3,28.33%*AB2,IF(T2=4,21.66%*AB2,0))))
+        // =IF(T2=1,0%*AB2,IF(T2=2,0%*AB2,IF(T2=3,28.33%*AB2,IF(T2=4,21.66%*AB2,0))))
+        // =IF(T2=1,0%*AB2,IF(T2=2,0%*AB2,IF(T2=3,0%*AB2,IF(T2=4,21.66%*AB2,0))))
+        if (jumlah_dpjp === 1) {
+            dpjp1 = dataKlaim.dr_DPJP_48;
+            dpjp2 = 0;
+            dpjp3 = 0;
+            dpjp4 = 0;
+        }
+        if (jumlah_dpjp === 2) {
+            dpjp1 = Math.round(60 / 100 * dataKlaim.dr_DPJP_48);
+            dpjp2 = Math.round(40 / 100 * dataKlaim.dr_DPJP_48);
+            dpjp3 = 0;
+            dpjp4 = 0;
+        }
+        if (jumlah_dpjp === 3) {
+            dpjp1 = Math.round(43.34 / 100 * dataKlaim.dr_DPJP_48);
+            dpjp2 = Math.round(28.33 / 100 * dataKlaim.dr_DPJP_48);
+            dpjp3 = Math.round(28.33 / 100 * dataKlaim.dr_DPJP_48);
+            dpjp4 = 0;
+        }
+        if (jumlah_dpjp === 4) {
+            dpjp1 = Math.round(35.02 / 100 * dataKlaim.dr_DPJP_48);
+            dpjp2 = Math.round(21.66 / 100 * dataKlaim.dr_DPJP_48);
+            dpjp3 = Math.round(21.66 / 100 * dataKlaim.dr_DPJP_48);
+            dpjp4 = Math.round(21.66 / 100 * dataKlaim.dr_DPJP_48);
+        }
+        if (dpjp_ke === 1) {
+            js_utama = dataKlaim.dr_DPJP_48;
+            js_raber = 0;
+        } else {
+            js_utama = 0;
+            js_raber = dpjp2;
+        }
+
+
+
 
 
         let dataPasein = {
@@ -337,12 +385,12 @@ function parsingDPJP(dataKlaim, dpjp, js_dpjp) {
             DPJP_INACBG: dataKlaim.DPJP_INACBG,
             jumlah_dpjp: jumlah_dpjp,
             dpjp_ke: dpjp_ke,
-            dpjp1: 0,
-            dpjp2: 0,
-            dpjp3: 0,
-            dpjp4: 0,
-            js_utama: 0,
-            js_raber: 0,
+            dpjp1: dpjp1,
+            dpjp2: dpjp2,
+            dpjp3: dpjp3,
+            dpjp4: dpjp4,
+            js_utama: js_utama,
+            js_raber: js_raber,
             dr_DPJP_48: dataKlaim.dr_DPJP_48,
             BEDAH: dataKlaim.BEDAH,
             VENTI: dataKlaim.VENTI,
@@ -370,7 +418,7 @@ function parsingDPJP(dataKlaim, dpjp, js_dpjp) {
 }
 function groupData(array) {
 
-    const uniqueValues = new Set(array);
+    const uniqueValues = [...new Set(array)];;
 
     // Buat array baru yang berisi hanya nilai yang duplikat
     const duplicateValues = Array.from(array.filter(item => array.indexOf(item) !== array.lastIndexOf(item)));
@@ -391,8 +439,157 @@ function groupData(array) {
     };
 }
 
+function rawRalan(e, cariSEP) {
+    let totaltarif = parseInt(e.biaya.bySetujui);
+    let bagi_rs = BPJS_Setujui(totaltarif);
+    let data_penujangRajal = penujangRajal(bagi_rs.Jasa_pelayanan);
+    try {
+        let dataKlaim = {
+            noFPK: e.noFPK,
+            noSEP: e.noSEP,
+            tglSep: e.tglSep,
+            nama_pasien: cariSEP.peserta.nama,
+            noMR: cariSEP.peserta.noMr,
+            noBPJS: cariSEP.peserta.noKartu,
+            tglLahir: cariSEP.peserta.tglLahir,
+            kelasRawat: e.kelasRawat,
+            nmDPJP: cariSEP.dpjp.nmDPJP,
+            kdDPJP: cariSEP.dpjp.kdDPJP,
+            poli: cariSEP.poli,
+            Inacbg: e.Inacbg.kode + ' - ' + e.Inacbg.nama,
+            bySetujui: parseInt(e.biaya.bySetujui),
+            byTarifGruper: parseInt(e.biaya.byTarifGruper),
+            byTarifRS: parseInt(e.biaya.byTarifRS),
+            Jasa_sarana: bagi_rs.Jasa_sarana,
+            Jasa_pelayanan: bagi_rs.Jasa_pelayanan,
+            BJP_strutural: data_penujangRajal.BJP_strutural,
+            penujang_medis: data_penujangRajal.penujang_medis,
+            mikro: data_penujangRajal.mikro,
+            lab: data_penujangRajal.lab,
+            farmasi: data_penujangRajal.farmasi,
+            radiologi: data_penujangRajal.radiologi,
+            medis: data_penujangRajal.medis,
+            dokter_48: data_penujangRajal.dokter_48,
+            perawat_31: data_penujangRajal.perawat_31,
+            managemnt_21: data_penujangRajal.managemnt_21,
+        }
+        // dataRAW.push(dataKlaim);
+        return dataKlaim;
+    } catch (error) {
+        console.log(error);
+        console.log(cariSEP);
+    }
+}
+function rawRanap(element, getDataSEP) {
+    let dpjp_ranap_bpj = getDataSEP.kontrol.nmDokter;
+    let prolis = element.PROCLIST;
+    let DIAGLIST = element.DIAGLIST;
+    let igd = true;
+    let hemo = (findProlist(prolis, '39.95') || findProlist(prolis, '38.93') || findProlist(prolis, '38.95')) ? true : false;
+    let venti = (findProlist(prolis, '96.72') || findProlist(prolis, '96.71')) ? true : false;
+    let bedah = element.PROSEDUR_BEDAH > 0 ? true : false;
+    let bagi_rs = BPJS_Setujui(parseInt(element.TOTAL_TARIF));
+    let duit_formasi = formasi(bagi_rs.Jasa_pelayanan, venti, bedah);
+    let bagi_penujang = penujang(duit_formasi.bangsal, igd, bedah);
+    let bagi_tindakanPerawat = tindakanPerawat(bagi_penujang.tindakan2persen, prolis)
+    let sisa2 = Math.round(bagi_penujang.tindakan2persen - bagi_tindakanPerawat.tindakan_usg - bagi_tindakanPerawat.fisioterapi - bagi_tindakanPerawat.EKG - bagi_tindakanPerawat.GDS - bagi_tindakanPerawat.USG);
+    let bagi_medis = medis(bagi_penujang.sisa, hemo);
+    let duit_oka = OKA(duit_formasi.bedah);
+    let duit_ventilator = ventilator(duit_formasi.venti);
 
-
+    let dataKlaim = {
+        noFPK: "-",
+        SEP: element.SEP,
+        nama_pasien: element.NAMA_PASIEN,
+        noMR: element.MRN,
+        noBPJS: element.NOKARTU,
+        kelasRawat: element.KELAS_RAWAT,
+        tglSep: element.ADMISSION_DATE,
+        tglPulang: element.DISCHARGE_DATE,
+        kode_inacbg_bpjs: "-",
+        nama_inacbg_bpjs: element.DESKRIPSI_INACBG,
+        TOTAL_TARIF: element.TOTAL_TARIF,
+        TARIF_RS: element.TARIF_RS,
+        TARIF_BPJS: parseInt(element.TARIF_INACBG),
+        TARIF_PROSEDUR_BEDAH: element.PROSEDUR_BEDAH,
+        LOS: element.LOS,
+        ICU_INDIKATOR: element.ICU_INDIKATOR,
+        ICU_LOS: element.ICU_LOS,
+        VENT_HOUR: element.VENT_HOUR,
+        jalurMasuk: '-',
+        Kamar1: "-",
+        Bangsal1: "-",
+        js_pr_inapB1: "-",
+        Kamar2: '-',
+        Bangsal2: '-',
+        js_pr_inapB2: '-',
+        Kamar3: '-',
+        Bangsal3: '-',
+        js_pr_inapB3: '-',
+        Kamar4: '-',
+        Bangsal4: '-',
+        js_pr_inapB4: '-',
+        DESKRIPSI_INACBG: element.DESKRIPSI_INACBG,
+        DIAGLIST: String(DIAGLIST),
+        PROCLIST: String(prolis),
+        DPJP_INACBG: element.DPJP,
+        dpjp_ranap_bpj: dpjp_ranap_bpj,
+        dpjp_ranap_RS1: '-',
+        dpjp_ranap_RS2: '-',
+        dpjp_ranap_RS3: '-',
+        dpjp_ranap_RS4: '-',
+        ventilation_more96: findProlist(element.PROCLIST, '96.72') ? "Y" : "N",
+        ventilation_less96: findProlist(element.PROCLIST, '96.71') ? "Y" : "N",
+        endotracheal_intubasi: findProlist(element.PROCLIST, '96.04') ? "Y" : "N",
+        IGD: igd ? "Y" : "N",
+        VENTI: venti ? "Y" : "N",
+        BEDAH: bedah ? "Y" : "N",
+        CVC: findProlist(element.PROCLIST, '38.93') ? "Y" : "N",
+        CDL: findProlist(element.PROCLIST, '38.95') ? "Y" : "N",
+        Bronkoskopi: findProlist(element.PROCLIST, '33.23') ? "Y" : "N",
+        EEG: findProlist(element.PROCLIST, '89.14') ? "Y" : "N",
+        CTG: findProlist(element.PROCLIST, '75.32') ? "Y" : "N",
+        Biopsi: findProlist(element.PROCLIST, '45.15') ? "Y" : "N",
+        "spinal canal": findProlist(element.PROCLIST, '03.92') ? "Y" : "N",
+        curettage: findProlist(element.PROCLIST, '69.09') ? "Y" : "N",
+        tindakan_usg: bagi_tindakanPerawat.tindakan_usg,
+        Jasa_sarana: bagi_rs.Jasa_sarana,
+        Jasa_pelayanan: bagi_rs.Jasa_pelayanan,
+        formasi_bangsal: duit_formasi.bangsal,
+        bcu: bagi_penujang.bcu,
+        "tindakan2%": bagi_penujang.tindakan2persen,
+        fisio: bagi_tindakanPerawat.fisioterapi,
+        ekg: Math.round(bagi_tindakanPerawat.EKG),
+        gds: Math.round(bagi_tindakanPerawat.GDS),
+        usg: Math.round(bagi_tindakanPerawat.USG),
+        "sisa2%": sisa2,
+        struktural: bagi_penujang.BJP_strutural,
+        lab: bagi_penujang.lab,
+        mikro: bagi_penujang.mkro,
+        farmasi: bagi_penujang.farmasi,
+        radiologi: bagi_penujang.radiologi,
+        drIGD: bagi_penujang.drIGD,
+        pr_igd: bagi_penujang.pr_igd,
+        dikurangi: bagi_penujang.sisa,
+        dr_DPJP_48: bagi_medis.dr_DPJP_48,
+        pr_31: bagi_medis.pr_31,
+        pr_ruangan: bagi_medis.pr_ruangan,
+        hemo: bagi_medis.hemodialisa,
+        managemnt_21: bagi_medis.mm_21,
+        formasi_bedah: duit_formasi.bedah,
+        dpjp_oka_60: duit_oka.dpjp_OK,
+        dr_operator_OK: duit_oka.dr_operator_OK,
+        pr_operator_OK: duit_oka.pr_operator_OK,
+        cssd: duit_oka.cssd,
+        anestesi_35: duit_oka.anestsi_OK,
+        dr_anestesi_OK: duit_oka.dr_anestesi,
+        formasi_venti: duit_formasi.venti,
+        dr_anestesi_venti: duit_ventilator.dr_anestesi,
+        pr_venti: duit_ventilator.pr_ventilator,
+        dr_ventilator: duit_ventilator.dr_ventilator
+    }
+    return dataKlaim;
+}
 
 module.exports = {
     BPJS_Setujui,
@@ -407,6 +604,8 @@ module.exports = {
     parsingBangsal,
     parsingBangsalPending,
     parsingDPJP,
-    groupData
+    groupData,
+    rawRalan,
+    rawRanap
 
 }

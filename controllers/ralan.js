@@ -19,11 +19,10 @@ const {
     parsingBangsal,
     parsingBangsalPending,
     parsingDPJP,
-    groupData
+    groupData,
+    rawRalan,
+    rawRanap
 } = require('../helpers/kalkulator');
-const { get } = require('http');
-const e = require('express');
-const { count } = require('console');
 module.exports = {
     getIGD: async (req, res) => {
         try {
@@ -1190,10 +1189,10 @@ module.exports = {
                     STEVIE: [],
                     TEGUH: [],
                     TOGU: [],
-                    URAY: [],
                     UNDARI: [],
                     VIVI: [],
                     YUNITA: [],
+                    YESS: [],
                     ZAINUL: []
                 };
                 const fileContent = fs.readFileSync('controllers/inacbg/' + param.dataINACBG, 'utf-8');
@@ -1538,6 +1537,7 @@ module.exports = {
                     },
                     attributes: ['no_rawat', 'nomr', 'no_sep', 'nmdiagnosaawal', 'kddpjp', 'nmdpdjp'],
                 });
+
                 if (dataSEP_FPK.length != dataSEP_SIMRS.length) {
                     let dataSEP_backdate = dataSEP_FPK.filter(item => !dataSEP_SIMRS.find(x => x.no_sep === item));
                     let dataSEP_briging = [];
@@ -1557,6 +1557,7 @@ module.exports = {
                     });
                     for (const element of dataSEP_briging) {
                         element.no_rawat = reg_maksuk.find(item => item.no_rkm_medis === element.peserta.noMr).no_rawat;
+
                     }
 
                     let noRegSEP_SIMRS = dataSEP_SIMRS.map(item => item.no_rawat);
@@ -1574,12 +1575,16 @@ module.exports = {
                         attributes: ['no_rawat', 'tgl_registrasi', 'no_rkm_medis', 'kd_poli'],
                     });
                     for (const element of dataSEP_briging) {
-                        // console.log(element);
+
                         element.poliklinik = reg_masuk_poli.find(item => item.no_rawat === element.no_rawat).poliklinik.nm_poli;
+
+
+
                     }
                     for (const element of dataSEP_SIMRS) {
 
                         element.dataValues.poliklinik = reg_masuk_poli.find(item => item.no_rawat === element.no_rawat).poliklinik.nm_poli;
+
                     }
                     let lastKamars = await kamar_inap.findAll({
                         where: {
@@ -1649,18 +1654,15 @@ module.exports = {
                         STEVIE: [],
                         TEGUH: [],
                         TOGU: [],
-                        URAY: [],
                         UNDARI: [],
+                        YESS: [],
                         VIVI: [],
                         YUNITA: [],
                         ZAINUL: []
                     };
-                    // return res.status(200).json({
-                    //     status: false,
-                    //     message: 'tidak Seimbang',
-                    //     klaim,
-                    // });
+
                     for (const element of klaim) {
+
                         if (dataSEP_SIMRS.find(obj => obj.no_sep === element.noSEP) == undefined) {
                             element.dataSEP_SIMRS = dataSEP_briging.find(obj => obj.noSep === element.noSEP);
                         } else {
@@ -1676,7 +1678,6 @@ module.exports = {
                             } else {
                                 poli = element.dataSEP_SIMRS.poliklinik
                             }
-                            console.log(poli);
                             let igd = (element.dataSEP_SIMRS.poliklinik == 'IGD') ? true : false;
                             let hemo = (findProlist(prolis, '39.95') || findProlist(prolis, '38.93') || findProlist(prolis, '38.95')) ? true : false;
                             let venti = (findProlist(prolis, '96.72') || findProlist(prolis, '96.71')) ? true : false;
@@ -1690,6 +1691,7 @@ module.exports = {
                             let duit_oka = OKA(duit_formasi.bedah);
                             let duit_ventilator = ventilator(duit_formasi.venti);
                             let lastKamar = lastKamars.filter(obj => obj.no_rawat === element.dataSEP_SIMRS.no_rawat);
+                            console.log(element.dataSEP_SIMRS.no_rawat);
                             let lamaInapB1 = lastKamar[0] ? lastKamar[0].lama : 0;
                             let lamaInapB2 = lastKamar[1] ? lastKamar[1].lama : 0;
                             let lamaInapB3 = lastKamar[2] ? lastKamar[2].lama : 0;
@@ -1699,9 +1701,6 @@ module.exports = {
                             let js_pr_inapB2 = Math.round(lamaInapB2 / lamaInap * bagi_medis.pr_ruangan);
                             let js_pr_inapB3 = Math.round(lamaInapB3 / lamaInap * bagi_medis.pr_ruangan);
                             let js_pr_inapB4 = Math.round(lamaInapB4 / lamaInap * bagi_medis.pr_ruangan);
-                            // console.log(lastKamar[0]);
-                            // console.log(element.dataSEP_SIMRS.no_rawat);
-                            // console.log(element);
                             let dpjp_ranap_bpj = '';
                             if (element.dataSEP_SIMRS.nmdpdjp == undefined) {
                                 dpjp_ranap_bpj = element.dataSEP_SIMRS.kontrol.nmDokter
@@ -1841,10 +1840,10 @@ module.exports = {
                         for (let key in js_dpjp) {
                             fs.writeFileSync('./cache/dpjp/' + key + ".json", JSON.stringify(js_dpjp[key]));
                         }
-                        fs.writeFileSync('./cache/' + "bangsal.json", JSON.stringify(js_pr));
-                        fs.writeFileSync('./cache/' + "dpjp.json", JSON.stringify(js_dpjp));
-                        fs.writeFileSync('./cache/' + "raw.json", JSON.stringify({ repot: datanoFPK, raw: dataRanap }));
-                        fs.writeFileSync('./cache/' + "repot.json", JSON.stringify(datanoFPK));
+                        fs.writeFileSync('./cache/' + "bangsal" + param.nameType + ".json", JSON.stringify(js_pr));
+                        fs.writeFileSync('./cache/' + "dpjp" + param.nameType + ".json", JSON.stringify(js_dpjp));
+                        fs.writeFileSync('./cache/' + "raw" + param.nameType + ".json", JSON.stringify({ repot: datanoFPK, raw: dataRanap }));
+                        fs.writeFileSync('./cache/' + "repot" + param.nameType + ".json", JSON.stringify(datanoFPK));
                         fs.writeFileSync('./cache/' + filename, JSON.stringify(dataRanap));
                         fs.writeFile('./cache/' + filename, JSON.stringify(dataRanap), (err, dataRalan) => {
                             if (err) {
@@ -1864,22 +1863,243 @@ module.exports = {
                         status: false,
                         message: 'tidak Seimbang',
                         record: {
-                            selisih: dataSEP_briging.length,
+                            selisih_briging: dataSEP_briging.length,
                             FPK: dataSEP_FPK.length,
                             dataSEP_SIMRS: dataSEP_SIMRS.length,
                             noRegSEP_SIMRS: noRegSEP_SIMRS.length,
-                            lostSEP: lostSEP
+                            lostSEP: lostSEP.length
                         },
                     });
                 }
+                // let dataSEP_backdate = dataSEP_FPK.filter(item => !dataSEP_SIMRS.find(x => x.no_sep === item));
+                // let grupTGLSEP = groupData(klaim.map(item => item.tglSep)).uniqueValues;
+                // let grupNoRms = groupData(klaim.map(item => item.peserta.noMR)).uniqueValues;
+                // if (dataSEP_FPK.length != dataSEP_SIMRS.length) {
+
+                // }
+
+                return res.status(200).json({
+                    status: true,
+                    message: 'Data klaim Ranap',
+                    // url: fullUrl + token + '.json',
+                    record: {
+                        dataSEP_FPK: dataSEP_FPK.length,
+                        grupTGLSEP: grupNoRms,
+                    },
+
+                });
+
             }
             return res.status(200).json({
                 status: true,
                 message: 'Data klaim Ranap',
-                url: fullUrl + token + '.json',
-                record: token,
-                klaim
+                // url: fullUrl + token + '.json',
+                record: {},
+                // dataSEP_FPK
             });
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({
+                status: false,
+                message: 'error',
+                data: error.message
+            });
+        }
+    },
+    RAW: async (req, res) => {
+        try {
+            let param = req.query;
+            if (param.pelayanan == 1) {
+                const fileContent = fs.readFileSync('controllers/inacbg/' + param.dataINACBG, 'utf-8');
+                let inacbg = JSON.parse(fileContent);
+                let dataRanap = [];
+                let js_dpjp = {
+                    AGUSTINUS: [],
+                    ALFONS: [],
+                    "ARI ": [],
+                    BORIS: [],
+                    DAVIS: [],
+                    DIANA: [],
+                    DJOKO: [],
+                    ESTU: [],
+                    FENNY: [],
+                    FREDDY: [],
+                    HANARTO: [],
+                    HARTONO: [],
+                    HERLING: [],
+                    HERISA: [],
+                    MARKUS: [],
+                    MARSITA: [],
+                    MUDIB: [],
+                    MUSLIM: [],
+                    MARIA: [],
+                    NOVI: [],
+                    RAHMAD: [],
+                    RACHIM: [],
+                    RADHITIO: [],
+                    SONNY: [],
+                    STEVIE: [],
+                    TEGUH: [],
+                    TOGU: [],
+                    UNDARI: [],
+                    VIVI: [],
+                    YUNITA: [],
+                    YESSIKA: [],
+                    ZAINUL: [],
+                    RANTAPINA: [],
+                    RUCHA: [],
+                    SULISTYO: [],
+                };
+                for (const e of inacbg) {
+                    let getDataSEP = await req.cache.json.get(`data:SEP:klaim:${param.pelayanan}:${e.noSEP}`, '$');
+                    if (getDataSEP == null) {
+
+                        getDataSEP = await axios.get(url_bpjs + '/api/bpjs/sep?noSEP=' + e.SEP);
+                        // getDataSEP = getDataSEP.;
+                        getDataSEP = getDataSEP.data.response;
+                        req.cache.json.set(`data:SEP:klaim:${param.pelayanan}:${e.noSEP}`, '$', getDataSEP);
+                        req.cache.expire(`data:SEP:klaim:${param.pelayanan}:${e.noSEP}`, 1200);
+                    }
+
+                    let dataKlaim = rawRanap(e, getDataSEP);
+                    dataRanap.push(dataKlaim);
+                    for (let key in js_dpjp) {
+                        let js = parsingDPJP(dataKlaim, key, js_dpjp);
+                        if (js !== null) {
+                            js_dpjp[key].push(js);
+                        }
+                    }
+                }
+
+                fs.writeFileSync('./cache/' + "dpjp" + param.nameType + ".json", JSON.stringify(js_dpjp));
+                fs.writeFileSync('./cache/' + "raw" + param.nameType + ".json", JSON.stringify({ raw: dataRanap }));
+
+
+                return res.status(200).json({
+                    status: false,
+                    message: 'Ranap',
+                    data: dataRanap
+                });
+            }
+            if (param.pelayanan == 2) {
+                let getDataSEP = await req.cache.json.get(`data:monitoring:klaim:${param.from}-${param.until}:${param.pelayanan}`, '$');
+                if (getDataSEP == null) {
+                    let x = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + param.from + '&until=' + param.until + '&pelayanan=2&status=3');
+                    getDataSEP = x.data.response.data;
+                    req.cache.json.set(`data:monitoring:klaim:${param.from}-${param.until}:${param.pelayanan}`, '$', x.data.response.data);
+                    req.cache.expire(`data:monitoring:klaim:${param.from}-${param.until}:${param.pelayanan}`, 60 * 60 * 24);
+                }
+                let dataRAW = [];
+                let zx = 0;
+                let zz = 0;
+                let er = 0;
+                for (let e of getDataSEP) {
+                    let cariSEP = await req.cache.json.get(`data:SEP:klaim:${param.pelayanan}:${e.noSEP}`, '$');
+                    if (cariSEP == null) {
+                        axios.get(url_bpjs + '/api/bpjs/sep?noSEP=' + e.noSEP).then((x) => {
+                            cariSEP = x.data.response;
+                            req.cache.json.set(`data:SEP:klaim:${param.pelayanan}:${e.noSEP}`, '$', x.data.response);
+                            req.cache.expire(`data:SEP:klaim:${param.pelayanan}:${e.noSEP}`, 1200);
+                            let data = rawRalan(e, cariSEP);
+                            dataRAW.push(data);
+                        }).catch((err) => {
+                            console.log(err);
+                            er++;
+                            return;
+                        });
+                        zz++;
+                        console.log("reguler :" + zz);
+                    } else {
+                        let data = rawRalan(e, cariSEP);
+                        dataRAW.push(data);
+                        zx++;
+                        console.log("chace :" + zx);
+                    }
+
+                }
+                console.log("reguler :" + zz);
+                console.log("chace :" + zx);
+                console.log("error :" + er);
+                // grup FPK
+                let groupFPK = groupData(dataRAW.map(item => item.noFPK)).duplicatesWithCount;
+                let groupdataFPK = [];
+                for (const element of groupFPK) {
+                    let data = {
+                        noFPK: element.value,
+                        bySetujui: dataRAW.filter(item => item.noFPK == element.value).map(item => parseInt(item.bySetujui)).reduce((a, b) => a + b, 0),
+                        byTarifGruper: dataRAW.filter(item => item.noFPK == element.value).map(item => parseInt(item.byTarifGruper)).reduce((a, b) => a + b, 0),
+                        byTarifRS: dataRAW.filter(item => item.noFPK == element.value).map(item => parseInt(item.byTarifRS)).reduce((a, b) => a + b, 0),
+                        count: element.count
+                    }
+                    groupdataFPK.push(data);
+                }
+                // grup DPJP
+                let groupDPJP = groupData(dataRAW.map(item => item.nmDPJP)).duplicatesWithCount;
+                let groupdataDPJP = [];
+                for (const element of groupDPJP) {
+                    let data = {
+                        nmDPJP: element.value,
+                        bySetujui: dataRAW.filter(item => item.nmDPJP == element.value).map(item => parseInt(item.bySetujui)).reduce((a, b) => a + b, 0),
+                        byTarifRS: dataRAW.filter(item => item.nmDPJP == element.value).map(item => parseInt(item.byTarifRS)).reduce((a, b) => a + b, 0),
+                        dokter_48: dataRAW.filter(item => item.nmDPJP == element.value).map(item => parseInt(item.dokter_48)).reduce((a, b) => a + b, 0),
+                        count: element.count
+                    }
+                    groupdataDPJP.push(data);
+                }
+                // filter by groupDPJP
+                console.log(groupDPJP);
+                fs.writeFileSync('./cache/' + "raw " + param.nameType + ".json", JSON.stringify({ raw: dataRAW, DPJP: groupdataDPJP, FPK: groupdataFPK }));
+
+                return res.status(200).json({
+                    status: false,
+                    message: 'Ralan',
+                    record: {
+                        dataRAW: dataRAW.length,
+                        getDataSEP: getDataSEP.length,
+                        groupdataDPJP,
+                        groupdataFPK
+                    },
+                    data: dataRAW,
+                    groupdataFPK,
+                    // cariSEP
+                });
+            }
+            if (param.pelayanan == 3) {
+                let getDataSEP = await req.cache.json.get(`data:monitoring:klaim:${param.from}-${param.until}:1`, '$');
+                if (getDataSEP == null) {
+                    let x = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + param.from + '&until=' + param.until + '&pelayanan=1&status=3');
+                    getDataSEP = x.data.response.data;
+                    req.cache.json.set(`data:monitoring:klaim:${param.from}-${param.until}:1`, '$', x.data.response.data);
+                    req.cache.expire(`data:monitoring:klaim:${param.from}-${param.until}:1`, 1200);
+                }
+
+                // grup tgl SEP 
+                // let groupSEP = groupData(getDataSEP.map(item => item.tglSep));
+                let noSEPs = getDataSEP.map(item => item.noSEP);
+                let getSEPSIMRS = await bridging_sep.findAll({
+                    where: {
+                        no_sep: noSEPs,
+                        jnspelayanan: '1'
+                    },
+                    attributes: ['no_rawat', 'nomr', 'no_sep', 'nmdiagnosaawal', 'kddpjp', 'nmdpdjp'],
+                });
+                // let kamarInaps = await kamar_inap.findAll({
+                //     where: {
+                //         no_rawat: getSEPSIMRS.map(item => item.no_rawat),
+                //     },
+                //     attributes: ['no_rawat', 'kd_kamar', 'tgl_masuk', 'tgl_keluar', 'stts_pulang', 'lama'],
+                // });
+                return res.status(200).json({
+                    status: false,
+                    message: 'Ralan',
+                    record: {
+                        getDataSEP: getDataSEP,
+                        getSEPSIMRS: getSEPSIMRS.length,
+                        // kamarInaps: kamarInaps
+                    },
+                }
+                );
+            }
         } catch (error) {
             console.log(error);
             return res.status(500).json({
@@ -1982,11 +2202,12 @@ module.exports = {
                     STEVIE: [],
                     TEGUH: [],
                     TOGU: [],
-                    URAY: [],
                     UNDARI: [],
                     VIVI: [],
                     YUNITA: [],
-                    ZAINUL: []
+                    ZAINUL: [],
+                    YESSIKA: [],
+                    RANTAPINA: []
                 };
 
                 let simrsSEP = await req.cache.json.get(`data:monitoring:Pendingklaim:${param.from}:${param.until}:${param.pelayanan}:simrsSEP`, '$');
