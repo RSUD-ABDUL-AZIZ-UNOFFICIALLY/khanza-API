@@ -1,14 +1,6 @@
 const { dokter, petugas, pegawai, jabatan, pasien, jadwal, kelurahan, kecamatan, kabupaten, penjab, spesialis, reg_periksa, poliklinik } = require('../models');
 const { Op } = require("sequelize");
 const { apiLPKP } = require('../helpers/api');
-const { createClient } = require('redis');
-const client = createClient({
-    password: process.env.REDIS_PASSWORD,
-    socket: {
-        host: process.env.REDIS_URL,
-        port: process.env.REDIS_URL_PORT
-    }
-});
 
 module.exports = {
     getDokter: async (req, res) => {
@@ -93,10 +85,8 @@ module.exports = {
     },
     getDokters: async (req, res) => {
         try {
-            client.connect();
-            let data = await client.json.get('API-Khnza:drSpesalis', '$');
+            let data = await req.cache.json.get('API-Khnza:drSpesalis', '$');
             if (data === null) {
-
                 data = await dokter.findAll({
                 attributes: { exclude: ['kd_sps', 'status'] },
                 where: {
@@ -149,10 +139,9 @@ module.exports = {
                 }
             });
 
-                client.json.set('API-Khnza:drSpesalis', '$', data);
-                client.expire('API-Khnza:drSpesalis', 3600 * 24 * 7);
+                req.cache.json.set('API-Khnza:drSpesalis', '$', data);
+                req.cache.expire('API-Khnza:drSpesalis', 3600 * 24);
             }
-            client.quit();
             return res.status(200).json({
                 status: true,
                 message: 'Data Dokter',
