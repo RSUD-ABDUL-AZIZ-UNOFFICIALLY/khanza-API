@@ -261,8 +261,6 @@ module.exports = {
     getKamar: async (req, res) => {
         try {
             let dataKamar = await bangsal.findAll({
-                // attributes: ['kd_bangsal', 'nm_bangsal'],
-                // not attributes 
                 attributes: { exclude: ['status'] },
                 where: {
 
@@ -304,7 +302,6 @@ module.exports = {
             if (param.kd_bangsal == undefined) {
                 param.kd_bangsal = "";
             }
-            console.log(param.kd_bangsal)
             const rawatInap = await kamar_inap.findAll({
                 attributes: [
                     "no_rawat",
@@ -315,7 +312,6 @@ module.exports = {
                 ],
                 where: {
                     stts_pulang: "-",
-
                 },
                 include: [
                     {

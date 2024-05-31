@@ -1,14 +1,14 @@
 PORT=8000
-# DB_USERNAME=al
-# DB_PASSWORD=
-# DB_NAME=
-# DB_HOST=localhost
-# DB_DIALECT=mariadb
+DB_USERNAME=al
+DB_PASSWORD=
+DB_NAME=
+DB_HOST=localhost
+DB_DIALECT=mariadb
 
 JWT_SECRET_KEY=""
-# NODE_ENV=
+NODE_ENV=
 
-# URL_BPJS="http://localhost:8080"
+URL_BPJS="http://localhost:8080"
 
 HOST_API_LPKP=""
 JWT_SECRET_KEY_LPKP=""
