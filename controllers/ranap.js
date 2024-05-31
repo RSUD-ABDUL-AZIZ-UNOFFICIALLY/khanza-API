@@ -260,6 +260,8 @@ module.exports = {
     },
     getKamar: async (req, res) => {
         try {
+            let cacheKamar = await req.cache.json.get(`API-Khnza:kamars:${req.query.nm_bangsal}`, '$');
+            if (!cacheKamar) {
             let dataKamar = await bangsal.findAll({
                 attributes: { exclude: ['status'] },
                 where: {
@@ -276,15 +278,18 @@ module.exports = {
                     }
                 ],
             });
-            // skip kamars yang kosong
             dataKamar = dataKamar.filter((item) => {
                 return item.kamars.length > 0;
             });
+                cacheKamar = dataKamar;
+                req.cache.json.set(`API-Khnza:kamars:${req.query.nm_bangsal}`, '$', dataKamar);
+                req.cache.expire(`API-Khnza:kamars:${req.query.nm_bangsal}`, 3600 * 24);
+            } 
             return res.status(200).json({
                 status: true,
                 message: 'Data kamar',
-                // record: dataKamar.length,
-                data: dataKamar,
+                record: cacheKamar.length,
+                data: cacheKamar,
             });
         } catch (err) {
             return res.status(400).json({
