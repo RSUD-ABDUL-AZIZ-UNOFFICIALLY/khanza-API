@@ -21,7 +21,9 @@ const {
     parsingDPJP,
     groupData,
     rawRalan,
-    rawRanap
+    rawRanap,
+    fomulaRemon,
+    fomulaRaber
 } = require('../helpers/kalkulator');
 module.exports = {
     getIGD: async (req, res) => {
@@ -1781,8 +1783,6 @@ module.exports = {
                     "Bangsal VK": [],
                     "Bangsal VK Bayi Sehat": [],
                 };
-
-
                 let js_dpjp = {
                     AGUSTINUS: [],
                     ALFONS: [],
@@ -2079,9 +2079,215 @@ module.exports = {
     },
     remon: async (req, res) => {
         try {
-            console.log('masuk');
             let param = req.query;
-            let data = [];
+            // RANAP
+            if (param.pelayanan == 1) {
+                let getChace = fs.readFileSync('cache/' + 'RawRanapJS' + '.json');
+                if (getChace) {
+                    let data = JSON.parse(getChace);
+                    let raw = [];
+                    let datanoFPK = [];
+                    for (let e of data) {
+                        let bedah = e.realcost.PROSEDUR_BEDAH > 0 ? true : false;
+                        let venti = (findProlist(e.PROCLIST, '96.72') || findProlist(e.PROCLIST, '96.71')) ? true : false;
+                        // let hemo = (findProlist(e.PROCLIST, '39.95') || findProlist(e.PROCLIST, '38.93') || findProlist(e.PROCLIST, '38.95')) ? true : false;
+                        let Jasa_pelayanan = parseInt(e.biaya.bySetujui) * 0.33;
+                        let pembagian = fomulaRemon(Jasa_pelayanan);
+                        let formulasi = formasi(pembagian.Medis, venti, bedah);
+                        let y = {
+                            noFPK: e.noFPK,
+                            noSEP: e.noSEP,
+                            tglSep: e.tglSep,
+                            tglPulang: e.tglPulang,
+                            lamaRawat: e.LOS,
+                            kelasRawat: e.kelasRawat,
+                            nmPasien: e.peserta.nama,
+                            noMR: e.peserta.noMR,
+                            noBPJS: e.peserta.noBPJS,
+                            tglLahir: e.BIRTH_DATE,
+                            umur: e.UMUR_TAHUN,
+                            sex: e.SEX === 1 ? 'Laki-laki' : 'Perempuan',
+                            ICD10: e.DIAGLIST,
+                            ICD9: e.PROCLIST,
+                            paketInacbg: e.Inacbg.nama + ' (' + e.Inacbg.kode + ')',
+                            desInacbg: e.DESKRIPSI_INACBG,
+                            bedah: bedah ? "Y" : "N",
+                            venti: venti ? "Y" : "N",
+                            ventilation_more96: findProlist(e.PROCLIST, '96.72') ? "Y" : "N",
+                            ventilation_less96: findProlist(e.PROCLIST, '96.71') ? "Y" : "N",
+                            endotracheal_intubasi: findProlist(e.PROCLIST, '96.04') ? "Y" : "N",
+                            hd: findProlist(e.PROCLIST, '39.95') ? "Y" : "N",
+                            cvc: findProlist(e.PROCLIST, '38.93') ? "Y" : "N",
+                            cdl: findProlist(e.PROCLIST, '38.95') ? "Y" : "N",
+                            bronkoskopi: findProlist(e.PROCLIST, '33.23') ? "Y" : "N",
+                            eeg: findProlist(e.PROCLIST, '89.14') ? "Y" : "N",
+                            ctg: findProlist(e.PROCLIST, '75.32') ? "Y" : "N",
+                            biopsi: findProlist(e.PROCLIST, '45.15') ? "Y" : "N",
+                            spinal_canal: findProlist(e.PROCLIST, '03.92') ? "Y" : "N",
+                            curettage: findProlist(e.PROCLIST, '69.09') ? "Y" : "N",
+                            dpjpBPJS: e.nmdpdjp,
+                            kdDpjpBPJS: e.kddpjp,
+                            dpjpRS: e.DPJP_RANAP,
+                            jumlahDPJPRS: e.jumlahDPJPRS,
+                            DPJP_INACBG: e.DPJP_INACBG,
+                            tarifInacbg: e.biaya.TARIF_INACBG,
+                            tarifRS: e.biaya.TARIF_RS,
+                            tarifBedah: e.realcost.PROSEDUR_BEDAH,
+                            bySetujui: e.biaya.bySetujui,
+                            Jasa_pelayanan: Jasa_pelayanan,
+                            Radiologi: pembagian.Radiologi,
+                            LabPK: pembagian.Labotarium,
+                            LabMB: pembagian.Microbiologi,
+                            Farmasi: pembagian.Farmasi,
+                            Rehap_Medik: pembagian.Rehap_Medik,
+                            UTD: pembagian.UTD,
+                            Struktrual: pembagian.Struktrual,
+                            Manajemen: pembagian.manajemen,
+                            Paramedis: pembagian.Paramedis,
+                            Medis: pembagian.Medis,
+                            JsDPJP: formulasi.bangsal,
+                            JsBEDAH: formulasi.bedah,
+                            JsVENTI: formulasi.venti,
+                        }
+                        raw.push(y);
+                        if (datanoFPK.find(obj => obj.noFPK === e.noFPK)) {
+                            let foundObject = datanoFPK.find(obj => obj.noFPK === e.noFPK)
+                            if (foundObject) {
+                                foundObject.byTarifRS += parseInt(e.biaya.TARIF_RS);
+                                foundObject.bySetujui += parseInt(e.biaya.bySetujui);
+                                foundObject.count++
+                            }
+                        } else {
+                            let newObj = { noFPK: e.noFPK, bySetujui: parseInt(e.biaya.bySetujui), byTarifRS: parseInt(e.biaya.byTarifRS), count: 1 };
+                            datanoFPK.push(newObj)
+
+                        }
+                    }
+                    fs.writeFileSync('./cache/' + "RawRanap4FPK.json", JSON.stringify({
+                        report: datanoFPK,
+                        raw: raw
+                    }));
+                    return res.status(200).json({
+                        status: true,
+                        message: 'Data klaim Ranap',
+                        record: {
+                            klaim: data.length,
+                            FPK: datanoFPK.length,
+                        },
+                        dataFPK: datanoFPK,
+                        getData: raw
+                        // data: getSEPSIMRS
+                    });
+
+                }
+                let getData = await req.cache.json.get(`data:monitoring:Pendingklaim:${param.from}:${param.until}:${param.pelayanan}:getDataBPJS`, '$');
+                if (getData == null) {
+                    getData = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan + '&status=' + param.status);
+                    getData = getData.data.response.data;
+                    req.cache.json.set(`data:monitoring:Pendingklaim:${param.from}:${param.until}:${param.pelayanan}:getDataBPJS`, '$', getData);
+                    req.cache.expire(`data:monitoring:Pendingklaim:${param.from}:${param.until}:${param.pelayanan}:getDataBPJS`, 60 * 60);
+                }
+                let inacbg = fs.readFileSync('controllers/inacbg/' + param.dataINACBG, 'utf-8');
+                inacbg = JSON.parse(inacbg);
+                let mapSEP = getData.map(item => item.noSEP);
+                let getSEPSIMRS = await bridging_sep.findAll({
+                    where: {
+                        no_sep: mapSEP,
+                        jnspelayanan: '1',
+                    },
+                    attributes: ['no_rawat', 'nomr', 'no_sep', 'nmdiagnosaawal', 'kddpjp', 'nmdpdjp'],
+                });
+                let sepBackded = getData.filter(item => !getSEPSIMRS.find(x => x.no_sep === item.noSEP));
+                for (let e of sepBackded) {
+                    let regData = await reg_periksa.findOne({
+                        where: {
+                            no_rkm_medis: e.peserta.noMR,
+                            tgl_registrasi: e.tglSep
+                        },
+                        attributes: ['no_rawat'],
+                        include: [{
+                            model: maping_dokter_dpjpvclaim,
+                            as: 'maping_dokter_dpjpvclaim',
+                        }]
+                    });
+                    e.no_rawat = regData.no_rawat;
+                    e.nmDPJP = regData.maping_dokter_dpjpvclaim.nm_dokter_bpjs;
+                    e.kdDPJP = regData.maping_dokter_dpjpvclaim.kd_dokter_bpjs;
+                    // e.regData = regData;
+                }
+
+
+                for (let e of getData) {
+                    let dataINA = inacbg.find(item => item.SEP === e.noSEP);
+                    // console.log((dataINA.C2));
+                    e.biaya.bySetujui = parseInt(e.biaya.bySetujui);
+                    e.biaya.TARIF_INACBG = dataINA.TARIF_INACBG;
+                    e.biaya.TARIF_RS = dataINA.TARIF_RS;
+                    e.biaya.TARIF_POLI_EKS = dataINA.TARIF_POLI_EKS;
+                    e.realcost = {
+                        PROSEDUR_NON_BEDAH: dataINA.PROSEDUR_NON_BEDAH,
+                        PROSEDUR_BEDAH: dataINA.PROSEDUR_BEDAH,
+                        PENUNJANG: dataINA.PENUNJANG,
+                        KEPERAWATAN: dataINA.KEPERAWATAN,
+                        KONSULTASI: dataINA.KONSULTASI,
+                        RADIOLOGI: dataINA.RADIOLOGI,
+                        LABORATORIUM: dataINA.LABORATORIUM,
+                        PELAYANAN_DARAH: dataINA.PELAYANAN_DARAH,
+                        KAMAR_AKOMODASI: dataINA.KAMAR_AKOMODASI,
+                        OBAT: dataINA.OBAT,
+                        ALKES: dataINA.ALKES,
+                        BMHP: dataINA.BMHP,
+                        REHABILITASI: dataINA.REHABILITASI
+                    }
+                    e.BIRTH_DATE = dataINA.BIRTH_DATE;
+                    e.UMUR_TAHUN = dataINA.UMUR_TAHUN;
+                    e.SEX = dataINA.SEX;
+                    e.DIAGLIST = dataINA.DIAGLIST;
+                    e.PROCLIST = dataINA.PROCLIST;
+                    e.DESKRIPSI_INACBG = dataINA.DESKRIPSI_INACBG;
+                    e.LOS = dataINA.LOS;
+                    e.DPJP_INACBG = dataINA.DPJP;
+                    let getSIMRS = getSEPSIMRS.find(item => item.no_sep === e.noSEP);
+                    if (getSIMRS) {
+                        e.no_rawat = getSIMRS.no_rawat;
+                        e.nmdpdjp = getSIMRS.nmdpdjp;
+                        e.kddpjp = getSIMRS.kddpjp;
+                    }
+                    let raberDPJP = await dpjp_ranap.findAll({
+                        where: {
+                            no_rawat: e.no_rawat,
+                        },
+                        attributes: ['kd_dokter'],
+                        include: [{
+                            model: dokter,
+                            as: 'dokter',
+                            attributes: ['nm_dokter']
+                        }],
+                    });
+                    // console.log(raberDPJP);
+                    e.raberDPJP = raberDPJP;
+                    e.jumlahDPJP = raberDPJP.length;
+                    if (raberDPJP.length > 0) {
+                        e.DPJP_RANAP = raberDPJP.map(item => item.dokter.nm_dokter).join(', ');
+                    } else {
+                        e.DPJP_RANAP = '-';
+                    }
+                }
+                fs.writeFileSync('./cache/' + "RawRanapJS.json", JSON.stringify(getData));
+
+                return res.status(200).json({
+                    status: true,
+                    message: 'Data klaim Ranap',
+                    record: {
+                        klaim: getData.length,
+                        inacbg: inacbg.length,
+                        getSEPSIMRS: getSEPSIMRS.length,
+                        sepBackded: sepBackded.length
+                    },
+                    getData: getData
+                    // data: getSEPSIMRS
+                });
+            }
 
             return res.status(200).json({
                 // dataFPK: groupdataFPK,

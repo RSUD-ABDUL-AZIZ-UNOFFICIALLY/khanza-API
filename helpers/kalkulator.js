@@ -591,6 +591,76 @@ function rawRanap(element, getDataSEP) {
     return dataKlaim;
 }
 
+function fomulaRemon(duit) {
+    let Farmasi, Labotarium, Radiologi, Microbiologi, UTD, Rehap_Medik, Struktrual, Medis, Paramedis, manajemen;
+    Farmasi = Math.round(2.2 / 100 * duit);
+    Labotarium = Math.round(2 / 100 * duit);
+    Radiologi = Math.round(3 / 100 * duit);
+    Microbiologi = Math.round(0.75 / 100 * duit);
+    UTD = Math.round(0.75 / 100 * duit);
+    Rehap_Medik = Math.round(0.75 / 100 * duit);
+    Struktrual = Math.round(7.5 / 100 * duit);
+    Medis = Math.round(41.75 / 100 * duit);
+    Paramedis = Math.round(23 / 100 * duit);
+    manajemen = Math.round(18 / 100 * duit);
+    let data = {
+        Farmasi,
+        Labotarium,
+        Radiologi,
+        Microbiologi,
+        UTD,
+        Rehap_Medik,
+        Struktrual,
+        Medis,
+        Paramedis,
+        manajemen
+    }
+    return data;
+}
+
+function fomulaRaber(duti, dpjp_ke, jumlah) {
+    let dpjpUtama = 0;
+    let dpjpRaber = 0;
+    // =IF(S6=1,100%*AA6,IF(S6=2,60%*AA6,IF(S6=3,43.34%*AA6,IF(S6=4,35.02%*AA6,0))))
+    if (dpjp_ke === 1) {
+        if (jumlah === 1) {
+            dpjpUtama = duti;
+            dpjpRaber = 0;
+        } else if (jumlah === 2) {
+            dpjpUtama = Math.round(60 / 100 * duti);
+        } else if (jumlah === 3) {
+            dpjpUtama = Math.round(43.34 / 100 * duti);
+        } else if (jumlah === 4) {
+            dpjpUtama = Math.round(35.02 / 100 * duti);
+        } else if (jumlah === 5) {
+            dpjpUtama = Math.round(30 / 100 * duti);;
+        } else if (jumlah === 6) {
+            dpjpUtama = Math.round(26 / 100 * duti);
+
+        }
+    } else {
+        if (jumlah === 2) {
+            dpjpUtama = 0;
+            dpjpRaber = Math.round(40 / 100 * duti);
+        } else if (jumlah === 3) {
+            dpjpUtama = 0;
+            dpjpRaber = Math.round(28.33 / 100 * duti);
+        } else if (jumlah === 4) {
+            dpjpUtama = 0;
+            dpjpRaber = Math.round(21.66 / 100 * duti);
+        } else if (jumlah === 5) {
+            dpjpUtama = 0;
+            dpjpRaber = Math.round(17.5 / 100 * duti);
+        } else if (jumlah === 6) {
+            dpjpUtama = 0;
+            dpjpRaber = Math.round(14.8 / 100 * duti);
+        }
+    }
+    return {
+        dpjpUtama,
+        dpjpRaber,
+    }
+}
 module.exports = {
     BPJS_Setujui,
     formasi,
@@ -606,6 +676,8 @@ module.exports = {
     parsingDPJP,
     groupData,
     rawRalan,
-    rawRanap
+    rawRanap,
+    fomulaRemon,
+    fomulaRaber
 
 }
