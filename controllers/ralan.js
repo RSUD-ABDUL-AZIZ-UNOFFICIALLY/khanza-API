@@ -2076,6 +2076,25 @@ module.exports = {
                 data: error.message
             });
         }
+    },
+    remon: async (req, res) => {
+        try {
+            console.log('masuk');
+            let param = req.query;
+            let data = [];
+
+            return res.status(200).json({
+                // dataFPK: groupdataFPK,
+                Klaim: param
+            });
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({
+                status: false,
+                message: 'error',
+                data: error.message
+            });
+        }
     }
 
 }

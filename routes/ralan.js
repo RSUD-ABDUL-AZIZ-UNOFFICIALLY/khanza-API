@@ -20,6 +20,7 @@ routes.get('/jasaruangan', ralan.getJasaRuangan);
 routes.get('/getJasaDrRanap', ralan.getJasaDrRanap);
 routes.get('/RAW', ralan.RAW);
 routes.get('/monitoring/jasa', ralan.monitoringJasa);
+routes.get('/monitoring/remon', ralan.remon);
 
 
 module.exports = routes;
