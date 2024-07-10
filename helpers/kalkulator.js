@@ -586,7 +586,7 @@ function rawRanap(element, getDataSEP) {
         formasi_venti: duit_formasi.venti,
         dr_anestesi_venti: duit_ventilator.dr_anestesi,
         pr_venti: duit_ventilator.pr_ventilator,
-        dr_ventilator: duit_ventilator.dr_ventilator
+        dr_ventilator: duit_ventilator.dr_ventilator,
     }
     return dataKlaim;
 }
@@ -601,7 +601,7 @@ function fomulaRemon(duit) {
     Rehap_Medik = Math.round(0.75 / 100 * duit);
     Struktrual = Math.round(7.5 / 100 * duit);
     Medis = Math.round(41.75 / 100 * duit);
-    Paramedis = Math.round(23 / 100 * duit);
+    Paramedis = Math.round(23.30 / 100 * duit);
     manajemen = Math.round(18 / 100 * duit);
     let data = {
         Farmasi,
@@ -636,8 +636,8 @@ function fomulaRaber(duti, dpjp_ke, jumlah) {
             dpjpUtama = Math.round(30 / 100 * duti);;
         } else if (jumlah === 6) {
             dpjpUtama = Math.round(26 / 100 * duti);
-
         }
+
     } else {
         if (jumlah === 2) {
             dpjpUtama = 0;
@@ -661,6 +661,36 @@ function fomulaRaber(duti, dpjp_ke, jumlah) {
         dpjpRaber,
     }
 }
+function formasiBedah(duit) {
+    let pOperator = Math.round(65 / 100 * duit);
+    let drOperator = Math.round(79.5 / 100 * pOperator);
+    let cssd = Math.round(0.5 / 100 * pOperator);
+    let prOperator = Math.round(20 / 100 * pOperator);
+
+    let pAnestesi = Math.round(35 / 100 * duit);
+    let drAnestesi = Math.round(80 / 100 * pAnestesi);
+    let prAnestesi = Math.round(20 / 100 * pAnestesi);
+    return {
+        pOperator,
+        drOperator,
+        cssd,
+        prOperator,
+        pAnestesi,
+        drAnestesi,
+        prAnestesi
+    }
+}
+function formasiVenti(duit) {
+    let drVenti = Math.round(60 / 100 * duit);
+    let drDPJP = Math.round(20 / 100 * duit);
+    let prVenti = Math.round(20 / 100 * duit);
+    return {
+        drVenti,
+        drDPJP,
+        prVenti
+    }
+
+}
 module.exports = {
     BPJS_Setujui,
     formasi,
@@ -678,6 +708,8 @@ module.exports = {
     rawRalan,
     rawRanap,
     fomulaRemon,
-    fomulaRaber
+    fomulaRaber,
+    formasiBedah,
+    formasiVenti
 
 }
