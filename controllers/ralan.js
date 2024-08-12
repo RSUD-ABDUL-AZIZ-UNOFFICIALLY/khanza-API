@@ -23,7 +23,9 @@ const {
     rawRalan,
     rawRanap,
     fomulaRemon,
-    fomulaRaber
+    fomulaRaber,
+    formasiBedah,
+    formasiVenti
 } = require('../helpers/kalkulator');
 module.exports = {
     getIGD: async (req, res) => {
@@ -2092,8 +2094,10 @@ module.exports = {
                         let venti = (findProlist(e.PROCLIST, '96.72') || findProlist(e.PROCLIST, '96.71')) ? true : false;
                         // let hemo = (findProlist(e.PROCLIST, '39.95') || findProlist(e.PROCLIST, '38.93') || findProlist(e.PROCLIST, '38.95')) ? true : false;
                         let Jasa_pelayanan = parseInt(e.biaya.bySetujui) * 0.33;
-                        let pembagian = fomulaRemon(Jasa_pelayanan);
+                        let pembagian = fomulaRemon(Jasa_pelayanan, bedah, venti);
                         let formulasi = formasi(pembagian.Medis, venti, bedah);
+                        let forBedah = formasiBedah(formulasi.bedah);
+                        let forVenti = formasiVenti(formulasi.venti);
                         let y = {
                             noFPK: e.noFPK,
                             noSEP: e.noSEP,
@@ -2101,6 +2105,7 @@ module.exports = {
                             tglPulang: e.tglPulang,
                             lamaRawat: e.LOS,
                             kelasRawat: e.kelasRawat,
+                            kamar: e.kamarInap,
                             nmPasien: e.peserta.nama,
                             noMR: e.peserta.noMR,
                             noBPJS: e.peserta.noBPJS,
@@ -2125,8 +2130,8 @@ module.exports = {
                             biopsi: findProlist(e.PROCLIST, '45.15') ? "Y" : "N",
                             spinal_canal: findProlist(e.PROCLIST, '03.92') ? "Y" : "N",
                             curettage: findProlist(e.PROCLIST, '69.09') ? "Y" : "N",
-                            dpjpBPJS: e.nmdpdjp,
-                            kdDpjpBPJS: e.kddpjp,
+                            dpjpBPJS: e.nmdpdjp ? e.nmdpdjp : e.nmDPJP,
+                            kdDpjpBPJS: e.kddpjp ? e.kddpjp : e.kdDPJP,
                             dpjpRS: e.DPJP_RANAP,
                             jumlahDPJPRS: e.jumlahDPJPRS,
                             DPJP_INACBG: e.DPJP_INACBG,
@@ -2142,12 +2147,23 @@ module.exports = {
                             Rehap_Medik: pembagian.Rehap_Medik,
                             UTD: pembagian.UTD,
                             Struktrual: pembagian.Struktrual,
-                            Manajemen: pembagian.manajemen,
+                            Manajemen: pembagian.Manajemen,
                             Paramedis: pembagian.Paramedis,
                             Medis: pembagian.Medis,
                             JsDPJP: formulasi.bangsal,
                             JsBEDAH: formulasi.bedah,
+                            paguOperator65: forBedah.pOperator,
+                            drOperator: forBedah.drOperator,
+                            // cssd: forBedah.cssd,
+                            prOperator: forBedah.prOperator,
+                            paguAnestesi35: forBedah.pAnestesi,
+                            drAnestesi: forBedah.drAnestesi,
+                            prAnestesi: forBedah.prAnestesi,
                             JsVENTI: formulasi.venti,
+                            drVenti: forVenti.drVenti,
+                            prVenti: forVenti.prVenti,
+                            dpjpVenti: forVenti.drDPJP,
+                            drAnestesiVenti: forVenti.drAnestesi,
                         }
                         raw.push(y);
                         if (datanoFPK.find(obj => obj.noFPK === e.noFPK)) {
@@ -2167,6 +2183,53 @@ module.exports = {
                         report: datanoFPK,
                         raw: raw
                     }));
+                    let dataDPJP = fs.readFileSync('controllers/inacbg/index/DPJP.json');
+                    let dpjpBedah = fs.readFileSync('controllers/inacbg/index/nmDPJPbedah.json');
+                    let dpjp = fs.readFileSync('controllers/inacbg/index/nmDPJP.json');
+                    let bedah = fs.readFileSync('controllers/inacbg/index/nmBedah.json');
+                    dataDPJP = JSON.parse(dataDPJP);
+                    dpjpBedah = JSON.parse(dpjpBedah);
+                    dpjp = JSON.parse(dpjp);
+                    bedah = JSON.parse(bedah);
+                    for (let e in dataDPJP) {
+                        for (let i of raw) {
+                            // console.log(i.DPJP_INACBG);
+                            if (i.DPJP_INACBG.includes(e)) {
+                                let dpjpRaber = 0;
+                                let op = 0;
+                                if (i.bedah == "Y") {
+                                    for (let x of dpjpBedah) {
+                                        if (i.DPJP_INACBG.includes(x)) {
+                                            dpjpRaber++;
+                                            op++;
+                                        }
+                                    }
+
+                                }
+                                if (i.bedah == "N") {
+                                    for (let x of dpjp) {
+                                        if (i.DPJP_INACBG.includes(x)) {
+                                            dpjpRaber++;
+                                        }
+                                    }
+                                }
+
+                                i.jumlDpjpRaber = dpjpRaber;
+                                i.dpjpke = 0;
+                                i.jasDPJP = 0;
+                                i.jasRaber = 0;
+
+                                i.jumlOperator = op;
+                                i.operatorke = 0;
+                                i.jsOperator = 0;
+                                dataDPJP[e].push(i);
+
+                            }
+                        }
+                    }
+                    fs.writeFileSync('./cache/' + "RawRanapDPJP.json", JSON.stringify(dataDPJP));
+
+
                     return res.status(200).json({
                         status: true,
                         message: 'Data klaim Ranap',
@@ -2216,7 +2279,6 @@ module.exports = {
                     // e.regData = regData;
                 }
 
-
                 for (let e of getData) {
                     let dataINA = inacbg.find(item => item.SEP === e.noSEP);
                     // console.log((dataINA.C2));
@@ -2264,7 +2326,6 @@ module.exports = {
                             attributes: ['nm_dokter']
                         }],
                     });
-                    // console.log(raberDPJP);
                     e.raberDPJP = raberDPJP;
                     e.jumlahDPJP = raberDPJP.length;
                     if (raberDPJP.length > 0) {
@@ -2272,6 +2333,26 @@ module.exports = {
                     } else {
                         e.DPJP_RANAP = '-';
                     }
+                    let findBed = await kamar_inap.findAll({
+                        where: {
+                            no_rawat: e.no_rawat,
+                        },
+                        // attributes: ['kd_kamar', 'lama', 'tgl_masuk', 'tgl_keluar', 'stts_pulang'],
+                        include: [{
+                            model: kamar,
+                            as: 'kode_kamar',
+                            attributes: ['kd_bangsal'],
+                            include: [{
+                                model: bangsal,
+                                as: 'bangsal',
+                                // attributes: ['nm_bangsal']
+                            }]
+                        }],
+                    });
+                    // console.log(findBed);
+                    e.kamar = findBed
+                    let namaKamar = findBed.map(item => item.dataValues.kode_kamar.bangsal.nm_bangsal + " - " + item.dataValues.lama + " hari").join(', ');
+                    e.kamarInap = namaKamar;
                 }
                 fs.writeFileSync('./cache/' + "RawRanapJS.json", JSON.stringify(getData));
 
@@ -2288,6 +2369,194 @@ module.exports = {
                     // data: getSEPSIMRS
                 });
             }
+            if (param.pelayanan == 2) {
+                let getData = await req.cache.json.get(`data:monitoring:klaim:${param.from}:${param.until}:${param.pelayanan}:getDataBPJS`, '$');
+                if (getData == null) {
+                    getData = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan + '&status=' + param.status);
+                    getData = getData.data.response.data;
+                    req.cache.json.set(`data:monitoring:klaim:${param.from}:${param.until}:${param.pelayanan}:getDataBPJS`, '$', getData);
+                    req.cache.expire(`data:monitoring:klaim:${param.from}:${param.until}:${param.pelayanan}:getDataBPJS`, 60 * 60);
+                }
+                let sepKlaim = getData.map(item => item.noSEP);
+                let getSEPSIMRS = await bridging_sep.findAll({
+                    where: {
+                        no_sep: sepKlaim,
+                        jnspelayanan: '2',
+                    },
+                    include: [{
+                        model: maping_dokter_dpjpvclaim,
+                        as: 'maping_dokter_dpjpvclaim',
+                    }],
+                    attributes: ['no_rawat', 'nomr', 'no_sep', 'nmdiagnosaawal', 'kddpjp', 'nmdpdjp'],
+                });
+                let sepBackded = getData.filter(item => !getSEPSIMRS.find(x => x.no_sep === item.noSEP));
+                for (let e of sepBackded) {
+                    let regData = await reg_periksa.findOne({
+                        where: {
+                            no_rkm_medis: e.peserta.noMR,
+                            tgl_registrasi: e.tglSep
+                        },
+                        attributes: ['no_rawat'],
+                        include: [{
+                            model: maping_dokter_dpjpvclaim,
+                            as: 'maping_dokter_dpjpvclaim',
+                        }]
+                    });
+                    e.no_rawat = regData.no_rawat;
+                    e.kddpjp = regData.maping_dokter_dpjpvclaim.kd_dokter_bpjs;
+                    e.nmdpdjp = regData.maping_dokter_dpjpvclaim.nm_dokter_bpjs;
+                    // e.regData = regData;
+                }
+                for (let e of getData) {
+                    let dataSIMRS = getSEPSIMRS.find(item => item.no_sep === e.noSEP);
+                    if (dataSIMRS) {
+                        // console.log(dataSIMRS);
+                        e.no_rawat = dataSIMRS.no_rawat;
+                        e.kddpjp = dataSIMRS.maping_dokter_dpjpvclaim.kd_dokter_bpjs;
+                        e.nmdpdjp = dataSIMRS.maping_dokter_dpjpvclaim.nm_dokter_bpjs;
+                    }
+                }
+                let noRawat = getData.map(item => item.no_rawat);
+                let raberDPJP = await rujukan_internal_poli.findAll({
+                    where: {
+                        no_rawat: noRawat,
+                    },
+                    // attributes: ['kd_dokter'],
+                    include: [{
+                        model: maping_dokter_dpjpvclaim,
+                        as: 'maping_dokter_dpjpvclaim',
+                        // attributes: ['nm_dokter']
+                    }, {
+                        model: poliklinik,
+                        as: 'poliklinik',
+                        // attributes: ['nm_dokter']
+                    }],
+                });
+                let datanoFPK = [];
+                let ralanDPJPUtama = [];
+                console.log(raberDPJP);
+                for (let e of getData) {
+                    let raber = raberDPJP.filter(item => item.no_rawat === e.no_rawat);
+                    e.jumlahRaber = raber.length;
+
+                    if (datanoFPK.find(obj => obj.noFPK === e.noFPK)) {
+                        let foundObject = datanoFPK.find(obj => obj.noFPK === e.noFPK)
+                        if (foundObject) {
+                            foundObject.byTarifRS += parseInt(e.biaya.byTarifRS);
+                            foundObject.bySetujui += parseInt(e.biaya.bySetujui);
+                            foundObject.pasien++
+                        }
+                    } else {
+                        let newObj = { noFPK: e.noFPK, bySetujui: parseInt(e.biaya.bySetujui), byTarifRS: parseInt(e.biaya.byTarifRS), pasien: 1 };
+                        datanoFPK.push(newObj)
+
+                    }
+                    let Jasa_pelayanan = parseInt(e.biaya.bySetujui) * 0.33;
+                    let pembagian = fomulaRemon(Jasa_pelayanan);
+                    let jsRaber = fomulaRaber(pembagian.Medis, 1, raber.length + 1);
+                    e.dpjpUtama = jsRaber.dpjpUtama;
+                    e.dpjpRaber = jsRaber.dpjpRaber;
+                    let jasaUtama = {
+                        noFPK: e.noFPK,
+                        noSEP: e.noSEP,
+                        noRawat: e.no_rawat,
+                        tglSep: e.tglSep,
+                        tglPulang: e.tglPulang,
+                        kelasRawat: e.kelasRawat,
+                        poli: e.poli,
+                        nmPasien: e.peserta.nama,
+                        noMR: e.peserta.noMR,
+                        noBPJS: e.peserta.noBPJS,
+                        paketInacbg: e.Inacbg.nama + ' (' + e.Inacbg.kode + ')',
+                        nmdpdjpUtama: e.nmdpdjp,
+                        kddpjpUtama: e.kddpjp,
+                        dpjpRaber: raber.map(item => item.maping_dokter_dpjpvclaim.nm_dokter_bpjs).join(', '),
+                        poliRaber: raber.map(item => item.poliklinik.nm_poli).join(', '),
+                        jmlRaber: raber.length,
+                        bySetujui: parseInt(e.biaya.bySetujui),
+                        byTarifRS: parseInt(e.biaya.byTarifRS),
+                        Jasa_pelayanan: Jasa_pelayanan,
+                        Radiologi: pembagian.Radiologi,
+                        LabPK: pembagian.Labotarium,
+                        LabMB: pembagian.Microbiologi,
+                        Farmasi: pembagian.Farmasi,
+                        Rehap_Medik: pembagian.Rehap_Medik,
+                        UTD: pembagian.UTD,
+                        Struktrual: pembagian.Struktrual,
+                        Manajemen: pembagian.Manajemen,
+                        Paramedis: pembagian.Paramedis,
+                        Medis: pembagian.Medis,
+                        JsDpjpUtama: jsRaber.dpjpUtama,
+                        JsDpjpRaber: jsRaber.dpjpRaber
+                    }
+                    ralanDPJPUtama.push(jasaUtama);
+                }
+                let ralanDPJPRaber = [];
+                for (let e of raberDPJP) {
+                    let raber = ralanDPJPUtama.find(item => item.noRawat === e.no_rawat);
+                    let jsRaber = fomulaRaber(raber.Medis, raber.jmlRaber + 1, raber.jmlRaber + 1);
+                    if (raber) {
+                        let jasaUtama = {
+                            noFPK: raber.noFPK,
+                            noSEP: raber.noSEP,
+                            noRawat: raber.noRawat,
+                            tglSep: raber.tglSep,
+                            tglPulang: raber.tglPulang,
+                            kelasRawat: raber.kelasRawat,
+                            poli: raber.poli,
+                            nmPasien: raber.nmPasien,
+                            noMR: raber.noMR,
+                            noBPJS: raber.noBPJS,
+                            paketInacbg: raber.paketInacbg,
+                            nmdpdjpUtama: raber.nmdpdjpUtama,
+                            kddpjpUtama: raber.kddpjpUtama,
+                            nmdpjpRaber: e.maping_dokter_dpjpvclaim.nm_dokter_bpjs,
+                            nmPoliRaber: e.poliklinik.nm_poli,
+                            jmlRaber: raber.jmlRaber,
+                            dpjpRaber: raber.dpjpRaber,
+                            poliRaber: raber.poliRaber,
+                            bySetujui: raber.bySetujui,
+                            byTarifRS: raber.byTarifRS,
+                            Jasa_pelayanan: raber.Jasa_pelayanan,
+                            Radiologi: raber.Radiologi,
+                            LabPK: raber.LabPK,
+                            LabMB: raber.LabMB,
+                            Farmasi: raber.Farmasi,
+                            Rehap_Medik: raber.Rehap_Medik,
+                            UTD: raber.UTD,
+                            Struktrual: raber.Struktrual,
+                            Paramedis: raber.Paramedis,
+                            Medis: raber.Medis,
+                            JsDpjpUtama: jsRaber.dpjpUtama,
+                            JsDpjpRaber: jsRaber.dpjpRaber
+                        }
+                        ralanDPJPRaber.push(jasaUtama);
+                    }
+
+
+                }
+                fs.writeFileSync('./cache/' + "RawRalanUTAMA.json", JSON.stringify({
+                    report: datanoFPK,
+                    DPJP_UTAMA: ralanDPJPUtama,
+                    DPJP_RABER: ralanDPJPRaber
+                }));
+
+                return res.status(200).json({
+                    status: true,
+                    message: 'Data klaim Ranap',
+                    record: {
+                        klaim: getData.length,
+                        getSEPSIMRS: getSEPSIMRS.length,
+                        sepBackded: sepBackded.length,
+                        noRawat: noRawat.length,
+                        raberDPJP: raberDPJP.length,
+                        datanoFPK: datanoFPK
+                    },
+                    ralanDPJPUtama: ralanDPJPUtama,
+                    ralanDPJPRaber: ralanDPJPRaber
+                });
+            }
+
 
             return res.status(200).json({
                 // dataFPK: groupdataFPK,
