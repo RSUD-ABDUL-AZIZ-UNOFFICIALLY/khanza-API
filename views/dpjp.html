@@ -86,6 +86,7 @@
                 <th>Kamar</th>
                 <th>Bangsal</th>
                 <th>Tanggal Masuk</th>
+                <th>Diagnosa Awal</th>
             </tr>
         </thead>
         <tbody  id="patient-table">
@@ -116,6 +117,7 @@
                         <td data-label="Kamar">${patient.kd_kamar}</td>
                         <td data-label="Bangsal">${patient.kode_kamar.bangsal.nm_bangsal}</td>
                         <td data-label="Tanggal Masuk">${patient.tgl_masuk}</td>
+                        <td data-label="Diagnosa Awal">${patient.diagnosa_awal}</td>
                     `;
                     tableBody.appendChild(row);
                 });

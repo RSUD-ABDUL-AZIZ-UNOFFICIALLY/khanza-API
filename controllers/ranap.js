@@ -449,7 +449,7 @@ module.exports = {
                     stts_pulang: "-",
                     '$dpjp_ranap.kd_dokter$': id
                 },
-                attributes: ['no_rawat', 'tgl_masuk', 'kd_kamar', 'kd_kamar'],
+                attributes: ['no_rawat', 'tgl_masuk', 'kd_kamar', 'kd_kamar', 'diagnosa_awal'],
                 include: [
                     {
                         model: reg_periksa,
