@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Pasien</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9fafb;
+        }
+        h1 {
+            color: #1d4ed8;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+          border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #1d4ed8;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f1f5f9;
+        }
+
+        /* Responsif untuk perangkat kecil */
+           @media (max-width: 600px) {
+            table {
+                display: block;
+                border: none;
+                box-shadow: none;
+            }
+            thead {
+                display: none;
+            }
+            tbody, tr, td {
+                display: block;
+                width: 100%;
+            }
+            tr {
+                margin-bottom: 15px;
+                padding: 10px;
+                border-radius: 10px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                background: white;
+            }
+            td {
+                text-align: left;
+                padding-left: 150px;
+                position: relative;
+                font-size: 16px;
+            }
+            td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                font-weight: bold;
+                color: #1d4ed8;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Daftar Pasien</h1>
+    <h3 id="namaDr"></h3>
+    <table>
+        <thead>
+            <tr>
+                <th>No Rawat</th>
+                <th>Nama</th>
+                <th>Tgl Lahir</th>
+                <th>Kamar</th>
+                <th>Bangsal</th>
+                <th>Tanggal Masuk</th>
+            </tr>
+        </thead>
+        <tbody  id="patient-table">
+    
+        </tbody>
+    </table>
+      <script>
+        async function fetchPatients() {
+            try {
+                let url = new URL(window.location.href);
+                console.log(url.searchParams.get('nik'));
+                const response = await fetch(`/api/ranap/pasien/dpjp?nik=${url.searchParams.get('nik')}&id=${url.searchParams.get('id')}`); // Ganti dengan API yang sesuai
+
+                const patients = await response.json();
+                console.log(patients);
+                let namaDr = document.getElementById('namaDr');
+                namaDr.innerHTML = patients.attributes.nama;
+                
+                const tableBody = document.getElementById('patient-table');
+                tableBody.innerHTML = '';
+                
+                patients.data.forEach(patient => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                    <td data-label="Kamar">${patient.no_rawat}</td>
+                        <td data-label="Nama">${patient.reg_periksa.pasien.nm_pasien} (${patient.reg_periksa.pasien.jk})</td>
+                        <td data-label="Tangal Lahir">${patient.reg_periksa.pasien.tgl_lahir}</td>
+                        <td data-label="Kamar">${patient.kd_kamar}</td>
+                        <td data-label="Bangsal">${patient.kode_kamar.bangsal.nm_bangsal}</td>
+                        <td data-label="Tanggal Masuk">${patient.tgl_masuk}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching patients:', error);
+            }
+        }
+
+        // Panggil fungsi fetchPatients saat halaman dimuat
+        fetchPatients();
+    </script>
+</body>
+</html>
