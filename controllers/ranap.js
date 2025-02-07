@@ -482,8 +482,9 @@ module.exports = {
 
             return res.status(200).json({
                 status: true,
-                message: "Stastistik pemeriksaan pasien rawat inap",
-                record: 0,
+                message: "Data pasien rawat inap",
+                record: dataRanap.length,
+                attributes: isExistDPJP,
                 data: dataRanap,
             });
         } catch (err) {
