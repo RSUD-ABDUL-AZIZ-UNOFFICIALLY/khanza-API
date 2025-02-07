@@ -1,5 +1,5 @@
 'use strict';
-const { reg_periksa, pasien, kamar_inap, kamar, bangsal, pemeriksaan_ranap, pegawai } = require('../models');
+const { reg_periksa, pasien, kamar_inap, kamar, bangsal, pemeriksaan_ranap, dpjp_ranap, pegawai } = require('../models');
 const { Op } = require("sequelize");
 module.exports = {
     getRanap: async (req, res) => {
@@ -426,6 +426,74 @@ module.exports = {
                 data: err,
             });
         }
+    },
+    getPxdpjp: async (req, res) => {
+        try {
+            const { nik, id } = req.query;
+            let isExistDPJP = await pegawai.findOne({
+                where: {
+                    no_ktp: nik,
+                    nik: id,
+                },
+                attributes: ['nik', 'nama', 'no_ktp']
+            });
+            if (!isExistDPJP) {
+                return res.status(400).json({
+                    status: false,
+                    message: "Bad Request",
+                    data: "Data DPJP tidak ditemukan",
+                });
+            }
+            let dataRanap = await kamar_inap.findAll({
+                where: {
+                    stts_pulang: "-",
+                    '$dpjp_ranap.kd_dokter$': id
+                },
+                attributes: ['no_rawat', 'tgl_masuk', 'kd_kamar', 'kd_kamar'],
+                include: [
+                    {
+                        model: reg_periksa,
+                        as: 'reg_periksa',
+                        attributes: ['no_rkm_medis'],
+                        include: [
+                            {
+                                model: pasien,
+                                as: 'pasien',
+                                attributes: ['nm_pasien', 'tgl_lahir', 'jk'],
+                            }],
+                    }, {
+                        model: kamar,
+                        as: 'kode_kamar',
+                        attributes: ['kd_bangsal', 'kelas'],
+                        include: [
+                            {
+                                model: bangsal,
+                                as: 'bangsal',
+                                attributes: ['nm_bangsal']
+                            }
+                        ]
+                    },
+                    {
+                        model: dpjp_ranap,
+                        as: 'dpjp_ranap',
+                    }
+                ],
+            });
+
+            return res.status(200).json({
+                status: true,
+                message: "Stastistik pemeriksaan pasien rawat inap",
+                record: 0,
+                data: dataRanap,
+            });
+        } catch (err) {
+            console.log(err);
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request",
+                data: err,
+            });
+        }    
     }
 
 }

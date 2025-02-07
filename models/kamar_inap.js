@@ -21,6 +21,11 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'no_rawat',
         as: 'reg_periksa'
       });
+      kamar_inap.hasMany(models.dpjp_ranap, {
+        foreignKey: 'no_rawat',
+        sourceKey: 'no_rawat',
+        as: 'dpjp_ranap'
+      });
     }
     
   }
