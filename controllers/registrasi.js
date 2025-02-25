@@ -509,10 +509,14 @@ module.exports = {
                 },
             });
             if (cekReg) {
-                return res.status(400).json({
-                    status: false,
-                    message: "Bad Request",
-                    data: "Pasien sudah melakukan registrasi",
+                return res.status(200).json({
+                    status: true,
+                    message: "success",
+                    data: {
+                        no_rawat: cekReg.no_rawat,
+                        no_reg: cekReg.no_reg,
+                        no_rkm_medis: cekReg.no_rkm_medis
+                    }
                 });
             }
             let dataPasien = await pasien.findOne({
