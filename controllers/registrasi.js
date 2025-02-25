@@ -1,6 +1,6 @@
 'use strict';
-const { reg_periksa, pasien, dokter, penjab, poliklinik, sequelize, booking_registrasi,jadwal } = require('../models');
-const { Op } = require("sequelize");
+const { reg_periksa, pasien, dokter, penjab, poliklinik, maping_poli_bpjs, sequelize, booking_registrasi, jadwal } = require('../models');
+const { Op, where } = require("sequelize");
 const { getCurrentTime } = require('../helpers');
 module.exports = {
     bookingPeriksa: async (req, res) => {
@@ -372,6 +372,62 @@ module.exports = {
             let dataJadwal = await jadwal.findAll({
                 where: {
                     kd_poli: kd_poli,
+                    hari_kerja: namaHari,
+                },
+                include: [
+                    {
+                        model: dokter,
+                        as: 'dokter',
+                        // attributes: ['nm_dokter'],
+                    },
+                ],
+
+
+            });
+            if (!dataJadwal) {
+                return res.status(404).json({
+                    status: false,
+                    message: "Not Found",
+                    data: "Jadwal tidak ditemukan",
+                });
+            }
+
+            return res.status(200).json({
+                status: true,
+                message: "success",
+                data: dataJadwal
+            });
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({
+                status: false,
+                message: "Bad Request",
+                data: error,
+            });
+        }
+    },
+    getJadwalBpjs: async (req, res) => {
+        try {
+            const { kd_poli, tanggal_periksa } = req.query;
+            if (!kd_poli || !tanggal_periksa) {
+                return res.status(400).json({
+                    status: false,
+                    message: "Bad Request",
+                    data: "Kode Poli dan Tanggal Periksa harus diisi",
+                });
+            }
+            let dateObject = new Date(tanggal_periksa);
+            let namaHari = dateObject.toLocaleDateString('id-ID', { weekday: 'long' });
+            let poliBPJS = await maping_poli_bpjs.findAll({
+                where: {
+                    kd_poli_bpjs: kd_poli
+                },
+                attributes: ['kd_poli_rs']
+
+            })
+            let dataJadwal = await jadwal.findAll({
+                where: {
+                    kd_poli: poliBPJS.kd_poli_rs,
                     hari_kerja: namaHari,
                 },
                 include: [
