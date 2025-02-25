@@ -567,7 +567,7 @@ module.exports = {
                 let tanggalDaftar = new Date(tanggal_periksa);
                 let umurdaftar = Math.floor((tanggalDaftar - tanggalLahir) / (1000 * 60 * 60 * 24 * 365.25));
                 await reg_periksa.create({
-                    no_reg: (parseInt(noPoliLast, 10) + 1).toString().padStart(noPoliLast.length, "0"),
+                    no_reg: (parseInt(noPoliLast.no_reg, 10) + 1).toString().padStart(noPoliLast.no_reg.length, "0"),
                     no_rawat: no_rawat,
                     tgl_registrasi: tanggal_periksa,
                     jam_reg: jam_reg,

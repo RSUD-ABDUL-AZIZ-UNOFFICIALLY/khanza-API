@@ -58,6 +58,9 @@ module.exports = (sequelize, DataTypes) => {
     pekerjaan: DataTypes.STRING,
     agama: DataTypes.STRING,
     nm_ibu: DataTypes.STRING,
+    namakeluarga: DataTypes.STRING,
+    alamatpj: DataTypes.STRING,
+    keluarga: DataTypes.STRING,
     // createdAt: { type: DataTypes.DATE, field: 'created_at' },
     // updatedAt: { type: DataTypes.DATE, field: 'updated_at' },
      // If don't want createdAt
