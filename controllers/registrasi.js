@@ -418,16 +418,17 @@ module.exports = {
             }
             let dateObject = new Date(tanggal_periksa);
             let namaHari = dateObject.toLocaleDateString('id-ID', { weekday: 'long' });
-            let poliBPJS = await maping_poli_bpjs.findAll({
+            let poliBPJS = await maping_poli_bpjs.findOne({
                 where: {
                     kd_poli_bpjs: kd_poli
                 },
                 attributes: ['kd_poli_rs']
 
             })
+            console.log(poliBPJS);
             let dataJadwal = await jadwal.findAll({
                 where: {
-                    kd_poli: poliBPJS.kd_poli_rs,
+                    kd_poli: poliBPJS.dataValues.kd_poli_rs,
                     hari_kerja: namaHari,
                 },
                 include: [
