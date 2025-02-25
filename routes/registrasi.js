@@ -11,6 +11,7 @@ routes.post('/bookingperiksa/cekin', middleware.check, registrasi.cekinBookingPe
 routes.get('/jadwal', middleware.check,  registrasi.getJadwal);
 routes.get('/jadwalBPJS', middleware.check, registrasi.getJadwalBpjs);
 routes.get('/asuransi', middleware.check, registrasi.getAsuransi);
+routes.post('/registrasi', middleware.check, registrasi.postRegistrasi);
 
 
 module.exports = routes;

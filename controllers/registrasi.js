@@ -491,5 +491,129 @@ module.exports = {
                 data: error,
             });
         }
+    },
+    postRegistrasi: async (req, res) => {
+        try {
+            const { no_rkm_medis, tanggal_periksa, kd_poli, jam_reg, kd_dokter, kd_pj } = req.body;
+            if (!no_rkm_medis || !tanggal_periksa) {
+                return res.status(400).json({
+                    status: false,
+                    message: "Bad Request",
+                    data: "No RM Medis dan Tanggal Periksa harus diisi",
+                });
+            }
+            let cekReg = await reg_periksa.findOne({
+                where: {
+                    no_rkm_medis,
+                    tgl_registrasi: tanggal_periksa,
+                },
+            });
+            if (cekReg) {
+                return res.status(400).json({
+                    status: false,
+                    message: "Bad Request",
+                    data: "Pasien sudah melakukan registrasi",
+                });
+            }
+            let dataPasien = await pasien.findOne({
+                where: {
+                    no_rkm_medis,
+                },
+            });
+            const t = await sequelize.transaction();
+            try {
+                let stt_poli = await reg_periksa.findOne({
+                    where: {
+                        no_rkm_medis,
+                        kd_poli,
+                    },
+                    attributes: ['status_poli'],
+                });
+                let noRawatLast = await reg_periksa.findOne({
+                    where: {
+                        tgl_registrasi: tanggal_periksa,
+                    },
+                    order: [
+                        ['no_rawat', 'DESC'],
+                    ],
+                    attributes: ['no_rawat'],
+                });
+                let noPoliLast = await reg_periksa.findOne({
+                    where: {
+                        tgl_registrasi: tanggal_periksa,
+                        kd_poli
+                    },
+                    order: [
+                        ['no_reg', 'DESC'],
+                    ],
+                    attributes: ['no_reg'],
+                });
+                let no_rawat;
+                let nomorRawaLast = tanggal_periksa.split('-');
+                if (!noRawatLast) {
+                    no_rawat = `${nomorRawaLast[0]}/${nomorRawaLast[1]}/${nomorRawaLast[2]}/000001`;
+                } else {
+                    let nomorRawaLastSplit = noRawatLast.no_rawat.split('/');
+                    let nomorRawaLastSplit5 = Number(nomorRawaLastSplit[3]) + 1;
+                    no_rawat = `${nomorRawaLastSplit[0]}/${nomorRawaLastSplit[1]}/${nomorRawaLastSplit[2]}/${String(nomorRawaLastSplit5).padStart(6, '0')}`;
+                }
+                let status_poli = '';
+                if (stt_poli) {
+                    status_poli = 'Lama';
+                } else {
+                    status_poli = 'Baru';
+                }
+                let tanggalLahir = new Date(dataPasien.tgl_lahir);
+                let tanggalDaftar = new Date(tanggal_periksa);
+                let umurdaftar = Math.floor((tanggalDaftar - tanggalLahir) / (1000 * 60 * 60 * 24 * 365.25));
+                await reg_periksa.create({
+                    no_reg: (parseInt(noPoliLast, 10) + 1).toString().padStart(noPoliLast.length, "0"),
+                    no_rawat: no_rawat,
+                    tgl_registrasi: tanggal_periksa,
+                    jam_reg: jam_reg,
+                    kd_dokter: kd_dokter,
+                    no_rkm_medis: no_rkm_medis,
+                    kd_poli: kd_poli,
+                    p_jawab: dataPasien.namakeluarga,
+                    almt_pj: dataPasien.alamatpj,
+                    hubunganpj: dataPasien.keluarga,
+                    biaya_reg: 0,
+                    stts: 'Belum',
+                    stts_daftar: 'Lama',
+                    status_lanjut: 'Ralan',
+                    kd_pj: kd_pj,
+                    umurdaftar: umurdaftar,
+                    sttsumur: 'Th',
+                    status_poli: status_poli,
+                }, { transaction: t });
+                await t.commit();
+            } catch (error) {
+                await t.rollback();
+                console.log(error);
+                return res.status(400).json({
+                    error: true,
+                    message: "error",
+                    data: error.message,
+                });
+            }
+
+            return res.status(200).json({
+                status: true,
+                message: "success",
+                data: {
+                    no_rawat: no_rawat,
+                    no_reg: (parseInt(noPoliLast, 10) + 1).toString().padStart(noPoliLast.length, "0"),
+                    no_rkm_medis: no_rkm_medis
+                }
+            });
+        }
+        catch (error) {
+            console.log(error);
+            return res.status(500).json({
+                status: false,
+                message: "Bad Request",
+                data: error,
+            });
+        }
     }
 };
