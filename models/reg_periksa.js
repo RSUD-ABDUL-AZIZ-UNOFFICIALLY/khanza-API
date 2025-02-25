@@ -83,7 +83,9 @@ module.exports = (sequelize, DataTypes) => {
     kd_pj: DataTypes.STRING,
     umurdaftar: DataTypes.INTEGER,
     sttsumur: DataTypes.ENUM('Th','Bl','Hr'),
-    status_poli: DataTypes.ENUM('Lama', 'Baru')
+    status_poli: DataTypes.ENUM('Lama', 'Baru'),
+    status_bayar: DataTypes.ENUM('Sudah Bayar', 'Belum Bayar')
+
   }, {
     sequelize,
     modelName: 'reg_periksa',
