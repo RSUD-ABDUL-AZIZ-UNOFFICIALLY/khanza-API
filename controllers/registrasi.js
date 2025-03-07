@@ -619,6 +619,13 @@ module.exports = {
                     ],
                     attributes: ['no_reg'],
                 });
+                console.log(noPoliLast);
+                let no_antrian = '';
+                if (!noPoliLast) {
+                    no_antrian = '001';
+                } else {
+                    no_antrian = (parseInt(noPoliLast.no_reg, 10) + 1).toString().padStart(noPoliLast.no_reg.length, "0")
+                }
                 let no_rawat;
                 let nomorRawaLast = tanggal_periksa.split('-');
                 if (!noRawatLast) {
@@ -637,7 +644,8 @@ module.exports = {
                 let tanggalLahir = new Date(dataPasien.tgl_lahir);
                 let tanggalDaftar = new Date(tanggal_periksa);
                 let umurdaftar = Math.floor((tanggalDaftar - tanggalLahir) / (1000 * 60 * 60 * 24 * 365.25));
-                let no_antrian = (parseInt(noPoliLast.no_reg, 10) + 1).toString().padStart(noPoliLast.no_reg.length, "0")
+
+
                 await reg_periksa.create({
                     no_reg: no_antrian,
                     no_rawat: no_rawat,
@@ -666,7 +674,8 @@ module.exports = {
                     data: {
                         no_rawat: no_rawat,
                         no_reg: no_antrian,
-                        no_rkm_medis: no_rkm_medis
+                        no_rkm_medis: no_rkm_medis,
+                        umurdaftar: umurdaftar,
                     }
                 });
             } catch (error) {
