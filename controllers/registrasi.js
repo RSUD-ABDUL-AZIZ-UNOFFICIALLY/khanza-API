@@ -406,6 +406,73 @@ module.exports = {
             });
         }
     },
+    getAllJadwal: async (req, res) => {
+        try {
+            const { tanggal_periksa } = req.query;
+            if (!tanggal_periksa) {
+                return res.status(400).json({
+                    status: false,
+                    message: "Bad Request",
+                    data: "Kode Tanggal Periksa harus diisi",
+                });
+            }
+            let dateObject = new Date(tanggal_periksa);
+            let namaHari = dateObject.toLocaleDateString('id-ID', { weekday: 'long' });
+            console.log(namaHari);
+            let dataJadwal = await jadwal.findAll({
+                where: {
+                    hari_kerja: namaHari
+                },
+                include: [
+                    {
+                        model: dokter,
+                        as: 'dokter',
+                        // attributes: ['nm_dokter'],
+                    },
+                    {
+                        model: poliklinik,
+                        as: 'poliklinik',
+                        // attributes: ['nm_poli'],
+                    },
+                ],
+
+
+            });
+            if (!dataJadwal) {
+                return res.status(404).json({
+                    status: false,
+                    message: "Not Found",
+                    data: "Jadwal tidak ditemukan",
+                });
+            }
+            dataJadwal = dataJadwal.map((item) => {
+                return {
+                    kd_jadwal: item.kd_jadwal,
+                    kd_poli: item.kd_poli,
+                    kd_dokter: item.kd_dokter,
+                    nm_dokter: item.dokter.nm_dokter,
+                    hari_kerja: item.hari_kerja,
+                    jam_mulai: item.jam_mulai,
+                    jam_selesai: item.jam_selesai,
+                    nm_poli: item.poliklinik.nm_poli,
+                }
+            });
+
+            return res.status(200).json({
+                status: true,
+                message: "success",
+                recoud: dataJadwal.length,
+                data: dataJadwal
+            });
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({
+                status: false,
+                message: "Bad Request",
+                data: error,
+            });
+        }
+    },
     getJadwalBpjs: async (req, res) => {
         try {
             const { kd_poli, tanggal_periksa } = req.query;
