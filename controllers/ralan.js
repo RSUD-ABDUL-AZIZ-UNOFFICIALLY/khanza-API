@@ -284,7 +284,12 @@ module.exports = {
                     as: 'pasien',
                     attributes: ['nm_pasien', 'no_rkm_medis', 'no_ktp','no_peserta']
                 },
-                 {
+                    {
+                        model: poliklinik,
+                        as: 'poliklinik',
+                        attributes: ['nm_poli']
+                    },
+                    {
                     model: dokter,
                     as: 'dokter',
                     attributes: ['nm_dokter']
