@@ -13,6 +13,7 @@ routes.get('/alljadwal', middleware.check, registrasi.getAllJadwal);
 routes.get('/jadwalBPJS', middleware.check, registrasi.getJadwalBpjs);
 routes.get('/asuransi', middleware.check, registrasi.getAsuransi);
 routes.post('/registrasi', middleware.check, registrasi.postRegistrasi);
+routes.get('/findsep/:sep', middleware.check, registrasi.dataSEP);
 
 
 module.exports = routes;

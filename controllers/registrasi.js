@@ -1,5 +1,5 @@
 'use strict';
-const { reg_periksa, pasien, dokter, penjab, poliklinik, maping_poli_bpjs, sequelize, booking_registrasi, jadwal } = require('../models');
+const { reg_periksa, bridging_sep, maping_dokter_dpjpvclaim, pasien, dokter, penjab, poliklinik, maping_poli_bpjs, sequelize, booking_registrasi, jadwal } = require('../models');
 const { Op, where } = require("sequelize");
 const { getCurrentTime } = require('../helpers');
 module.exports = {
@@ -691,6 +691,48 @@ module.exports = {
 
         }
         catch (error) {
+            console.log(error);
+            return res.status(500).json({
+                status: false,
+                message: "Bad Request",
+                data: error,
+            });
+        }
+    },
+    dataSEP: async (req, res) => {
+        try {
+            const { sep } = req.params;
+            console.log(sep);
+            let dataSEP = await bridging_sep.findOne({
+                where: {
+                    no_sep: sep,
+                },
+                attributes: ['no_sep', 'no_rawat', 'tglsep', 'jnspelayanan', 'klsrawat', 'nmpolitujuan', 'nmdiagnosaawal'],
+                include: [
+                    {
+                        model: maping_dokter_dpjpvclaim,
+                        as: 'maping_dokter_dpjpvclaim',
+                    },
+                    {
+                        model: pasien,
+                        as: 'pasien',
+                        attributes: ['nm_pasien', 'tgl_lahir', 'jk', 'no_ktp', 'no_peserta']
+                    }
+                ]
+            });
+            if (!dataSEP) {
+                return res.status(404).json({
+                    status: false,
+                    message: "Not Found",
+                    data: "Data SEP tidak ditemukan",
+                });
+            }
+            return res.status(200).json({
+                status: true,
+                message: "success",
+                data: dataSEP
+            });
+        } catch (error) {
             console.log(error);
             return res.status(500).json({
                 status: false,
