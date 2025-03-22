@@ -716,7 +716,7 @@ module.exports = {
                     {
                         model: pasien,
                         as: 'pasien',
-                        attributes: ['nm_pasien', 'tgl_lahir', 'jk', 'no_ktp', 'no_peserta']
+                        attributes: ['nm_pasien', 'tgl_lahir', 'jk', 'no_rkm_medis', 'no_ktp', 'no_peserta']
                     }
                 ]
             });
