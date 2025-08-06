@@ -2130,6 +2130,8 @@ module.exports = {
                             biopsi: findProlist(e.PROCLIST, '45.15') ? "Y" : "N",
                             spinal_canal: findProlist(e.PROCLIST, '03.92') ? "Y" : "N",
                             curettage: findProlist(e.PROCLIST, '69.09') ? "Y" : "N",
+                            endos: findProlist(e.PROCLIST, '45.22') ? "Y" : "N",
+                            endoscopy: findProlist(e.PROCLIST, '45.23') ? "Y" : "N",
                             dpjpBPJS: e.nmdpdjp ? e.nmdpdjp : e.nmDPJP,
                             kdDpjpBPJS: e.kddpjp ? e.kddpjp : e.kdDPJP,
                             dpjpRS: e.DPJP_RANAP,
@@ -2283,6 +2285,7 @@ module.exports = {
                     let dataINA = inacbg.find(item => item.SEP === e.noSEP);
                     // console.log((dataINA.C2));
                     e.biaya.bySetujui = parseInt(e.biaya.bySetujui);
+                    // e.biaya.bySetujui = parseInt(dataINA.TARIF_INACBG);
                     e.biaya.TARIF_INACBG = dataINA.TARIF_INACBG;
                     e.biaya.TARIF_RS = dataINA.TARIF_RS;
                     e.biaya.TARIF_POLI_EKS = dataINA.TARIF_POLI_EKS;
@@ -2374,6 +2377,9 @@ module.exports = {
                 if (getData == null) {
                     getData = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan + '&status=' + param.status);
                     getData = getData.data.response.data;
+                    let getData2 = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan + '&status=1');
+                    getData2 = getData2.data.response.data;
+                    getData = getData.concat(getData2);
                     req.cache.json.set(`data:monitoring:klaim:${param.from}:${param.until}:${param.pelayanan}:getDataBPJS`, '$', getData);
                     req.cache.expire(`data:monitoring:klaim:${param.from}:${param.until}:${param.pelayanan}:getDataBPJS`, 60 * 60);
                 }
@@ -2434,7 +2440,7 @@ module.exports = {
                 });
                 let datanoFPK = [];
                 let ralanDPJPUtama = [];
-                console.log(raberDPJP);
+                // console.log(raberDPJP);
                 for (let e of getData) {
                     let raber = raberDPJP.filter(item => item.no_rawat === e.no_rawat);
                     e.jumlahRaber = raber.length;
@@ -2456,6 +2462,7 @@ module.exports = {
                     let jsRaber = fomulaRaber(pembagian.Medis, 1, raber.length + 1);
                     e.dpjpUtama = jsRaber.dpjpUtama;
                     e.dpjpRaber = jsRaber.dpjpRaber;
+                    // console.log(e.no_rawat);
                     let jasaUtama = {
                         noFPK: e.noFPK,
                         noSEP: e.noSEP,
