@@ -1,6 +1,5 @@
 'use strict';
 const { reg_periksa, pasien, dokter, poliklinik, jadwal, pegawai, pemeriksaan_ralan, bridging_sep, dpjp_ranap, operasi, paket_operasi, bangsal, kamar, kamar_inap, maping_dokter_dpjpvclaim, maping_poli_bpjs, rujukan_internal_poli } = require('../models');
-const moment = require('moment');
 const axios = require('axios');
 const { Op } = require("sequelize");
 const fs = require('fs');
@@ -2093,7 +2092,7 @@ module.exports = {
                         let bedah = e.realcost.PROSEDUR_BEDAH > 0 ? true : false;
                         let venti = (findProlist(e.PROCLIST, '96.72') || findProlist(e.PROCLIST, '96.71')) ? true : false;
                         // let hemo = (findProlist(e.PROCLIST, '39.95') || findProlist(e.PROCLIST, '38.93') || findProlist(e.PROCLIST, '38.95')) ? true : false;
-                        let Jasa_pelayanan = parseInt(e.biaya.bySetujui) * 0.33;
+                        let Jasa_pelayanan = parseInt(e.biaya.bySetujui) * 0.35;
                         let pembagian = fomulaRemon(Jasa_pelayanan, bedah, venti);
                         let formulasi = formasi(pembagian.Medis, venti, bedah);
                         let forBedah = formasiBedah(formulasi.bedah);
@@ -2252,7 +2251,7 @@ module.exports = {
                     req.cache.json.set(`data:monitoring:Pendingklaim:${param.from}:${param.until}:${param.pelayanan}:getDataBPJS`, '$', getData);
                     req.cache.expire(`data:monitoring:Pendingklaim:${param.from}:${param.until}:${param.pelayanan}:getDataBPJS`, 60 * 60);
                 }
-                let inacbg = fs.readFileSync('controllers/inacbg/' + param.dataINACBG, 'utf-8');
+                let inacbg = fs.readFileSync('cache/' + param.dataINACBG, 'utf-8');
                 inacbg = JSON.parse(inacbg);
                 let mapSEP = getData.map(item => item.noSEP);
                 let getSEPSIMRS = await bridging_sep.findAll({
@@ -2283,7 +2282,7 @@ module.exports = {
 
                 for (let e of getData) {
                     let dataINA = inacbg.find(item => item.SEP === e.noSEP);
-                    // console.log((dataINA.C2));
+                    // console.log((e.noSEP));
                     e.biaya.bySetujui = parseInt(e.biaya.bySetujui);
                     // e.biaya.bySetujui = parseInt(dataINA.TARIF_INACBG);
                     e.biaya.TARIF_INACBG = dataINA.TARIF_INACBG;
@@ -2416,7 +2415,7 @@ module.exports = {
                 for (let e of getData) {
                     let dataSIMRS = getSEPSIMRS.find(item => item.no_sep === e.noSEP);
                     if (dataSIMRS) {
-                        // console.log(dataSIMRS);
+                        console.log(dataSIMRS.no_sep);
                         e.no_rawat = dataSIMRS.no_rawat;
                         e.kddpjp = dataSIMRS.maping_dokter_dpjpvclaim.kd_dokter_bpjs;
                         e.nmdpdjp = dataSIMRS.maping_dokter_dpjpvclaim.nm_dokter_bpjs;

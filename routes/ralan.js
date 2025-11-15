@@ -21,6 +21,9 @@ routes.get('/getJasaDrRanap', ralan.getJasaDrRanap);
 routes.get('/RAW', ralan.RAW);
 routes.get('/monitoring/jasa', ralan.monitoringJasa);
 routes.get('/monitoring/remon', ralan.remon);
+// routes.get('/monitoring/remon2', ralan.remon2);
+// routes.get('/covid', ralan.covid);
+
 
 
 module.exports = routes;

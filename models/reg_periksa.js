@@ -56,9 +56,11 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'no_rawat',
         as: 'diagnosa_pasien'
       });
-
-      
-      
+      reg_periksa.hasOne(models.bridging_sep, {
+        foreignKey: 'no_rawat',
+        sourceKey: 'no_rawat',
+        as: 'bridging_sep'
+      });
       
     }
 

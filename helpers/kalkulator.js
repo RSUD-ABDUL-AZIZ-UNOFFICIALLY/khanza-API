@@ -1,4 +1,3 @@
-const e = require("express");
 
 function BPJS_Setujui(duit) {
     let Jasa_sarana = 65 / 100 * duit;
@@ -13,9 +12,9 @@ function BPJS_Setujui(duit) {
 function formasi(duit, dventi, dbedah) {
     let venti, bedah, bangsal;
     if (dventi && dbedah) {
-        venti = Math.round(30 / 100 * duit);
+        venti = Math.round(40 / 100 * duit);
         bedah = Math.round(40 / 100 * duit);
-        bangsal = Math.round(30 / 100 * duit);
+        bangsal = Math.round(20 / 100 * duit);
         let data = {
             venti,
             bedah,
@@ -24,9 +23,9 @@ function formasi(duit, dventi, dbedah) {
         return data;
     }
     if (dventi && !dbedah) {
-        venti = Math.round(30 / 100 * duit);
+        venti = Math.round(40 / 100 * duit);
         bedah = 0;
-        bangsal = Math.round(70 / 100 * duit);
+        bangsal = Math.round(60 / 100 * duit);
         let data = {
             venti,
             bedah,
@@ -36,8 +35,8 @@ function formasi(duit, dventi, dbedah) {
     }
     if (!dventi && dbedah) {
         venti = 0;
-        bedah = Math.round(60 / 100 * duit);
-        bangsal = Math.round(40 / 100 * duit);
+        bedah = Math.round(67 / 100 * duit);
+        bangsal = Math.round(33 / 100 * duit);
         let data = {
             venti,
             bedah,
@@ -591,18 +590,22 @@ function rawRanap(element, getDataSEP) {
     return dataKlaim;
 }
 
-function fomulaRemon(duit) {
-    let Farmasi, Labotarium, Radiologi, Microbiologi, UTD, Rehap_Medik, Struktrual, Medis, Paramedis, manajemen;
-    Farmasi = Math.round(2.2 / 100 * duit);
+function fomulaRemon(duit, bedah, venti) {
+    let Farmasi, Labotarium, Radiologi, Microbiologi, UTD, Rehap_Medik, Struktrual, Medis, Paramedis, Manajemen;
+    Radiologi = Math.round(2.8 / 100 * duit);
     Labotarium = Math.round(2 / 100 * duit);
-    Radiologi = Math.round(3 / 100 * duit);
     Microbiologi = Math.round(0.75 / 100 * duit);
-    UTD = Math.round(0.75 / 100 * duit);
+    Farmasi = Math.round(2.2 / 100 * duit);
     Rehap_Medik = Math.round(0.75 / 100 * duit);
-    Struktrual = Math.round(7.5 / 100 * duit);
-    Medis = Math.round(41.75 / 100 * duit);
-    Paramedis = Math.round(23.30 / 100 * duit);
-    manajemen = Math.round(18 / 100 * duit);
+    UTD = Math.round(0.75 / 100 * duit);
+    Struktrual = Math.round(5.8 / 100 * duit);
+    Manajemen = Math.round(11 / 100 * duit);
+    Paramedis = Math.round(23 / 100 * duit);
+    if (bedah === true || venti === true) {
+        Medis = Math.round(50 / 100 * duit);
+    } else {
+        Medis = Math.round(41.75 / 100 * duit);
+    }
     let data = {
         Farmasi,
         Labotarium,
@@ -613,7 +616,7 @@ function fomulaRemon(duit) {
         Struktrual,
         Medis,
         Paramedis,
-        manajemen
+        Manajemen
     }
     return data;
 }
@@ -663,8 +666,8 @@ function fomulaRaber(duti, dpjp_ke, jumlah) {
 }
 function formasiBedah(duit) {
     let pOperator = Math.round(65 / 100 * duit);
-    let drOperator = Math.round(79.5 / 100 * pOperator);
-    let cssd = Math.round(0.5 / 100 * pOperator);
+    let drOperator = Math.round(80 / 100 * pOperator);
+    // let cssd = Math.round(0.5 / 100 * pOperator);
     let prOperator = Math.round(20 / 100 * pOperator);
 
     let pAnestesi = Math.round(35 / 100 * duit);
@@ -673,7 +676,7 @@ function formasiBedah(duit) {
     return {
         pOperator,
         drOperator,
-        cssd,
+        // cssd,
         prOperator,
         pAnestesi,
         drAnestesi,

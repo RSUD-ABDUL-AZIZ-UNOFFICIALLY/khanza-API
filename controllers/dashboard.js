@@ -1,6 +1,7 @@
 "use strict";
-const { reg_periksa, poliklinik, penjab, kamar_inap, kamar, bangsal } = require("../models");
+const { reg_periksa, poliklinik, penjab, kamar_inap, kamar, bangsal, bridging_sep } = require("../models");
 const { Op } = require("sequelize");
+const fs = require('fs');
 module.exports = {
   poliHarian: async (req, res) => {
     try {
@@ -235,6 +236,62 @@ module.exports = {
           penjab: sortedData,
         },
     });
+    } catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        status: false,
+        message: "Bad Request",
+        data: err,
+      });
+    }
+  },
+  getAsuransiPulang: async (req, res) => {
+    try {
+      const param = req.query;
+      const { id } = req.params;
+      let inacbg = fs.readFileSync('controllers/inacbg/' + param.dataINACBG, 'utf-8');
+      inacbg = JSON.parse(inacbg);
+      let count = await kamar_inap.findAll({
+        where: {
+          tgl_keluar: { [Op.between]: [param.from, param.until] },
+          stts_pulang: { [Op.notIn]: ["-", "Pindah Kamar"] },
+          '$reg_periksa.kd_pj$': "BPJ",
+          '$reg_periksa.bridging_sep.no_sep$': { [Op.ne]: null },
+          '$reg_periksa.bridging_sep.jnspelayanan$': '1'
+        },
+        include: [
+          {
+            model: reg_periksa,
+            as: "reg_periksa",
+            attributes: ["kd_pj", "no_rawat", "no_rkm_medis"],
+            include: [
+              {
+                model: bridging_sep,
+                as: "bridging_sep",
+                attributes: ["no_sep"],
+              }
+            ]
+          },
+        ]
+      })
+      const noSepArray = count.map(item => item.reg_periksa.bridging_sep.no_sep);
+      const noInacbgArray = inacbg.map(item => item.SEP);
+
+      const unmatchedArray = count.filter(count =>
+        !inacbg.some(inacbg => inacbg.SEP === count.reg_periksa.bridging_sep.no_sep)
+      );
+      return res.status(200).json({
+        status: true,
+        message: "Stastistik ",
+        record: count.length,
+        // record_sep: noSepArray.length,
+        record_unmatchedArray: unmatchedArray.length,
+        record_inacbg: noInacbgArray.length,
+        data: {
+          unmatchedArray: unmatchedArray,
+          reg: count,
+        },
+      });
     } catch (err) {
       console.log(err);
       return res.status(400).json({

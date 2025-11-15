@@ -19,6 +19,7 @@ const client = createClient({
     }
 });
 client.connect();
+console.log(process.env.REDIS_URL);
 client.on('connect', () => {
     console.log('Redis client connected');
 });

@@ -1,0 +1,3 @@
+GET /api/ralan/monitoring/remon?from=2025-07-01&until=2025-07-31&status=3&pelayanan=1&filterFPK=null&dataINACBG=ranap0625.json HTTP/1.1
+Host: localhost:8000
+Authorization: ••••••
