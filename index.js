@@ -48,6 +48,7 @@ app.use('/api/views', views);
 // app.use('/api/surat', require('./routes/surat'));
 app.use('/api/registrasi', require('./routes/registrasi'));
 app.use('/api/users', require('./routes/user'));
+app.use('/api/inacbg', require('./routes/inacbg'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

@@ -1,6 +1,7 @@
 const e = require("express");
 const jwt = require("jsonwebtoken");
 const axios = require('axios');
+const { inacbg_encrypt, inacbg_decrypt } = require("./encryption");
 async function apiLPKP(nik) {
     let natanik = jwt.sign(nik, process.env.JWT_SECRET_KEY_LPKP);
     try {
@@ -18,6 +19,34 @@ async function apiLPKP(nik) {
     }
 }
 
+async function callEklaim(payload) {
+    try {
+        const encrypted = inacbg_encrypt(payload);
+
+        const response = await axios.post(process.env.INACBG_UrlWS, encrypted, {
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        });
+
+        const raw = response.data;
+
+        // hilangkan header + footer seperti manual
+        const cleaned = raw
+            .replace("----BEGIN ENCRYPTED DATA----", "")
+            .replace("----END ENCRYPTED DATA----", "")
+            .trim();
+
+        const decrypted = inacbg_decrypt(cleaned);
+
+        return JSON.parse(decrypted);
+    } catch (err) {
+        console.error("API ERROR:", err.message);
+        return { error: err.message };
+    }
+}
+
 module.exports = {
-    apiLPKP
+    apiLPKP,
+    callEklaim
 }
