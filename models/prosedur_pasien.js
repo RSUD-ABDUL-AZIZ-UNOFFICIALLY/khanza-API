@@ -3,19 +3,19 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class diagnosa_pasien extends Model {
+  class prosedur_pasien extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-        diagnosa_pasien.belongsTo(models.penyakit, {
+        prosedur_pasien.belongsTo(models.penyakit, {
           as: 'penyakit',
-          foreignKey: 'kd_penyakit',
+          foreignKey: 'kode',
           sourceKey: 'kd_penyakit',
         });
-        diagnosa_pasien.belongsTo(models.reg_periksa, {
+        prosedur_pasien.belongsTo(models.reg_periksa, {
           as: 'reg_periksa',
           foreignKey: 'no_rawat',
           sourceKey: 'no_rawat',
@@ -23,38 +23,34 @@ module.exports = (sequelize, DataTypes) => {
     }
     
   }
-  diagnosa_pasien.init({
+  prosedur_pasien.init({
     no_rawat: {
       type: DataTypes.STRING(17),
-      allowNull: false,
       primaryKey: true,
     },
-    kd_penyakit: {
-      type: DataTypes.STRING(10),
-      allowNull: false,
+    kode: {
+      type: DataTypes.STRING(8),
       primaryKey: true,
     },
     status: {
       type: DataTypes.ENUM('Ralan','Ranap'),
-      allowNull: false,
       primaryKey: true,
     },
     prioritas: {
       type: DataTypes.TINYINT,
       allowNull: false,
-      primaryKey: true,
     },
-    status_penyakit: {
-      type: DataTypes.ENUM('Lama', 'Baru'),
+    jumlah: {
+      type: DataTypes.STRING(3),
       allowNull: true,
     },
   }, {
     sequelize,
-    modelName: 'diagnosa_pasien',
-    tableName: 'diagnosa_pasien',
+    modelName: 'prosedur_pasien',
+    tableName: 'prosedur_pasien',
     timestamps: false,
     createdAt: false,
     updatedAt: false,
   });
-  return diagnosa_pasien;
+  return prosedur_pasien;
 };

@@ -46,6 +46,11 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'no_rawat',
         as: 'diagnosa_pasien'
       });
+      reg_periksa.hasMany(models.prosedur_pasien, {
+        foreignKey: 'no_rawat',
+        sourceKey: 'no_rawat',
+        as: 'prosedur_pasien'
+      })
       reg_periksa.hasOne(models.maping_dokter_dpjpvclaim, {
         foreignKey: 'kd_dokter',
         sourceKey: 'kd_dokter',
