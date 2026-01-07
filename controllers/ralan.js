@@ -2274,14 +2274,20 @@ module.exports = {
                             as: 'maping_dokter_dpjpvclaim',
                         }]
                     });
+                    // console.log(e);
                     e.no_rawat = regData.no_rawat;
                     e.nmDPJP = regData.maping_dokter_dpjpvclaim.nm_dokter_bpjs;
                     e.kdDPJP = regData.maping_dokter_dpjpvclaim.kd_dokter_bpjs;
                     // e.regData = regData;
                 }
-
+                let belums = []
                 for (let e of getData) {
                     let dataINA = inacbg.find(item => item.SEP === e.noSEP);
+                    if (dataINA == undefined) {
+                        console.log((e.noSEP));
+                        belums.push(e.noSEP);
+                        continue;
+                    }
                     // console.log((e.noSEP));
                     e.biaya.bySetujui = parseInt(e.biaya.bySetujui);
                     // e.biaya.bySetujui = parseInt(dataINA.TARIF_INACBG);
@@ -2362,6 +2368,7 @@ module.exports = {
                     status: true,
                     message: 'Data klaim Ranap',
                     record: {
+                        belumKirim: belums,
                         klaim: getData.length,
                         inacbg: inacbg.length,
                         getSEPSIMRS: getSEPSIMRS.length,
