@@ -1,6 +1,6 @@
 const { callEklaim } = require('../helpers/api');
-const { penjab, poliklinik, pasien, dokter, icd10, icd9, penyakit, kategori_penyakit, reg_periksa, diagnosa_pasien, prosedur_pasien, sequelize } = require('../models');
-const { Op } = require("sequelize");
+const { penjab, poliklinik, pasien, dokter, icd10, icd9, penyakit, kategori_penyakit, bridging_sep, reg_periksa, diagnosa_pasien, prosedur_pasien, sequelize } = require('../models');
+const { Op, where } = require("sequelize");
 module.exports = {
     ws: async (req, res) => {
         try{
@@ -48,14 +48,11 @@ module.exports = {
             if (keyword) {
                 whereConditions[Op.or] = [
                     { no_rawat: { [Op.like]: `%${keyword}%` } },
-                    { tgl_registrasi: { [Op.like]: `%${keyword}%` } },
-                    { kd_dokter: { [Op.like]: `%${keyword}%` } },
                     { '$dokter.nm_dokter$': { [Op.like]: `%${keyword}%` } },
                     { no_rkm_medis: { [Op.like]: `%${keyword}%` } },
-                    { status_bayar: { [Op.like]: `%${keyword}%` } },
                     { '$pasien.nm_pasien$': { [Op.like]: `%${keyword}%` } },
                     { '$poliklinik.nm_poli$': { [Op.like]: `%${keyword}%` } },
-                    { '$penjab.png_jawab$': { [Op.like]: `%${keyword}%` } }
+                    { '$bridging_sep.no_sep$': { [Op.like]: `%${keyword}%` } },
                 ];
             }
 
@@ -63,7 +60,7 @@ module.exports = {
                 attributes: [
                     'no_reg', 'no_rawat', 'tgl_registrasi', 'jam_reg',
                     'kd_dokter', 'no_rkm_medis', 'p_jawab', 'almt_pj',
-                    'hubunganpj', 'biaya_reg', 'status_bayar'
+                    'hubunganpj', 'biaya_reg', 'status_lanjut', 'status_bayar'
                 ],
                 include: [
                     {
@@ -111,6 +108,17 @@ module.exports = {
                         as: 'prosedur_pasien',
                         attributes: ['kode'],
                         required: false
+                    },
+                    {
+                        model: bridging_sep,
+                        as: 'bridging_sep',
+                        required: false,
+                        where: {
+                            jnspelayanan: sequelize.literal(
+                                "(CASE WHEN status_lanjut = 'Ranap' THEN '1' ELSE '2' END)"
+                            ),
+                        },
+                        attributes: ['no_sep', 'no_rawat', 'tglsep', 'jnspelayanan']
                     }
                 ],
                 where: whereConditions,
