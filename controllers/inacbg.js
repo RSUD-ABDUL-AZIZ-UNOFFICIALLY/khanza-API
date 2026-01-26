@@ -27,6 +27,17 @@ module.exports = {
             const keyword = req.query.keyword || '';
             const tanggalawal = req.query.tanggalawal || '2024-01-01';
             const tanggalakhir = req.query.tanggalakhir || '2024-01-01';
+            let status_lanjut = req.query.status_lanjut || 'semua';
+            if (status_lanjut = 'semua') {
+
+                status_lanjut = {
+                    [Op.in]: [
+                        'Ralan',
+                        'Ranap'
+                    ]
+                }
+            }
+            console.log(status_lanjut);
             const whereConditions = {
                 stts: {
                     [Op.ne]: 'Batal'
@@ -36,7 +47,8 @@ module.exports = {
                         `${tanggalawal}`,
                         `${tanggalakhir}`
                     ]
-                }
+                },
+                status_lanjut: status_lanjut
             };
 
             if (carabayar) {
