@@ -11,6 +11,12 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      dpjp_ranap.hasOne(models.dokter, {
+        foreignKey: 'kd_dokter',
+        sourceKey: 'kd_dokter',
+        as: 'dokter'
+
+      })
     }
 
   }

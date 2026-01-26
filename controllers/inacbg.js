@@ -1,5 +1,5 @@
 const { callEklaim } = require('../helpers/api');
-const { penjab, poliklinik, pasien, dokter, icd10, icd9, penyakit, kategori_penyakit, bridging_sep, reg_periksa, diagnosa_pasien, prosedur_pasien, sequelize } = require('../models');
+const { penjab, poliklinik, pasien, dokter, icd10, icd9, penyakit, kategori_penyakit, kamar_inap, dpjp_ranap, bridging_sep, reg_periksa, diagnosa_pasien, prosedur_pasien, sequelize } = require('../models');
 const { Op, where } = require("sequelize");
 module.exports = {
     ws: async (req, res) => {
@@ -14,6 +14,75 @@ module.exports = {
             }
             );
         } catch (err) {
+            return res.status(400).json({
+                status: false,
+                message: 'Bad Request',
+                data: err
+            });
+        }
+    },
+    ranapdpjp: async (req, res) => {
+        try {
+            let no_rawat = req.query.no_rawat;
+            let getdpjp_ranap = await dpjp_ranap.findAll({
+                where: {
+                    no_rawat: no_rawat
+                },
+                attributes: ["kd_dokter"],
+                include: {
+                    model: dokter,
+                    as: 'dokter',
+                    attributes: ['nm_dokter']
+                }
+            })
+            let nmDPJP = '';
+            if (getdpjp_ranap.length > 0) {
+                let arrNmDPJP = [];
+                for (let x of getdpjp_ranap) {
+                    arrNmDPJP.push(x.dokter.nm_dokter.split(' ')[1]);
+                }
+                nmDPJP = arrNmDPJP.join(', ');
+            }
+            let letkamarInap = await kamar_inap.findAll({
+                where: {
+                    no_rawat: no_rawat
+                },
+                order: [
+                    ['tgl_masuk', 'ASC']
+                ]
+                // attributes: ["kd_kamar"],
+            })
+            if (letkamarInap.length == 0) {
+                return res.status(403).json({
+                    status: true,
+                    message: 'Bukan Pasein Ranap',
+                    data: letkamarInap
+                });
+            }
+            if (letkamarInap[letkamarInap.length - 1].tgl_keluar == '0000-00-00') {
+                return res.status(403).json({
+                    status: true,
+                    message: 'Pasien belum pulang',
+                    data: letkamarInap
+                });
+            }
+            let sttrawat = {
+                tgl_masuk: letkamarInap[0].tgl_masuk,
+                tgl_keluar: letkamarInap[letkamarInap.length - 1].tgl_keluar
+            }
+
+            return res.status(200).json({
+                status: true,
+                message: 'Data dpjp ranap',
+                data: {
+                    nmDPJP: nmDPJP,
+                    sttrawat,
+                    getdpjp_ranap,
+                }
+            });
+
+        } catch (err) {
+            console.log(err)
             return res.status(400).json({
                 status: false,
                 message: 'Bad Request',
