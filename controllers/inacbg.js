@@ -86,7 +86,8 @@ module.exports = {
                         as: 'pasien',
                         attributes: [
                             'nm_pasien',
-                            'nm_pasien',
+                            'no_peserta',
+                            'tgl_lahir',
                             [
                                 sequelize.literal(
                                     "IF(pasien.jk = 'L', 'Laki-Laki', 'Perempuan')"
