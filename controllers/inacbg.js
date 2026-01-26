@@ -131,7 +131,7 @@ module.exports = {
                                 "(CASE WHEN status_lanjut = 'Ranap' THEN '1' ELSE '2' END)"
                             ),
                         },
-                        attributes: ['no_sep', 'no_rawat', 'tglsep', 'jnspelayanan']
+                        attributes: ['no_sep', 'no_rawat', 'tglsep', 'klsrawat', 'jnspelayanan']
                     }
                 ],
                 where: whereConditions,
