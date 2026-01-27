@@ -155,6 +155,39 @@ module.exports = {
             });
 
             let kamar = parseFloat(billingKamar) + parseFloat(dataReg?.biaya_reg || 0);
+            // 9. Obat, Kronis, & Kemoterapi
+            let obat_kronis = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: 'Obat', nm_perawatan: { [Op.like]: '%kronis%' } }
+            }) || 0;
+
+            let obat_kemoterapi = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: 'Obat', nm_perawatan: { [Op.like]: '%kemo%' } }
+            }) || 0;
+
+            let total_obat_raw = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: ['Obat', 'Retur Obat', 'Resep Pulang'] }
+            }) || 0;
+
+            let obat = parseFloat(total_obat_raw) - parseFloat(obat_kronis) - parseFloat(obat_kemoterapi);
+
+            // 10. BMHP (Tambahan)
+            let bmhp = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: 'Tambahan' }
+            }) || 0;
+
+            // 11. Sewa Alat (Harian & Service)
+            let sewa_alat = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: ['Harian', 'Service'] }
+            }) || 0;
+
+            // 12. Rehabilitasi (Ralan & Ranap Dokter Paramedis, include 'terapi')
+            let rehabilitasi = await billing.sum('totalbiaya', {
+                where: {
+                    no_rawat,
+                    status: ['Ralan Dokter Paramedis', 'Ranap Dokter Paramedis'],
+                    nm_perawatan: { [Op.like]: '%terapi%' }
+                }
+            }) || 0;
 
 
             return res.status(200).json({
@@ -173,7 +206,11 @@ module.exports = {
                         keperawatan,
                         radiologi,
                         laboratorium,
-                        kamar
+                        kamar,
+                        obat,
+                        bmhp,
+                        sewa_alat,
+                        rehabilitasi
 
 
                     }
@@ -290,7 +327,11 @@ module.exports = {
                         keperawatan,
                         radiologi,
                         laboratorium,
-                        kamar
+                        kamar,
+                        obat,
+                        bmhp,
+                        sewa_alat,
+                        rehabilitasi
                     }
                 }
             });
