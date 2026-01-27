@@ -1,5 +1,5 @@
 const { callEklaim } = require('../helpers/api');
-const { penjab, poliklinik, pasien, dokter, icd10, icd9, penyakit, kategori_penyakit, kamar_inap, dpjp_ranap, bridging_sep, reg_periksa, diagnosa_pasien, prosedur_pasien, sequelize } = require('../models');
+const { penjab, poliklinik, pasien, dokter, icd10, icd9, penyakit, kategori_penyakit, pemeriksaan_ranap, kamar_inap, dpjp_ranap, bridging_sep, reg_periksa, diagnosa_pasien, prosedur_pasien, sequelize } = require('../models');
 const { Op, where } = require("sequelize");
 module.exports = {
     ws: async (req, res) => {
@@ -59,6 +59,26 @@ module.exports = {
                     data: letkamarInap
                 });
             }
+            let tensi = await pemeriksaan_ranap.findAll({
+                where: {
+                    no_rawat: req.query.no_rawat
+                },
+            })
+            let dataTensi = '110/60';
+            if (tensi.length > 0) {
+                let dataTensi = tensi.map(item => {
+                    return {
+                        tensi: item.tensi
+                    };
+                });
+                tensi = dataTensi;
+                for (let i = 0; i < tensi.length; i++) {
+                    if (tensi[i].tensi != "") {
+                        dataTensi = tensi[i].tensi;
+                        return
+                    }
+                }
+            }
             if (letkamarInap[letkamarInap.length - 1].tgl_keluar == '0000-00-00') {
                 return res.status(403).json({
                     status: true,
@@ -68,7 +88,8 @@ module.exports = {
             }
             let sttrawat = {
                 tgl_masuk: letkamarInap[0].tgl_masuk,
-                tgl_keluar: letkamarInap[letkamarInap.length - 1].tgl_keluar
+                tgl_keluar: letkamarInap[letkamarInap.length - 1].tgl_keluar,
+                stts_pulang: letkamarInap[letkamarInap.length - 1].stts_pulang
             }
 
             return res.status(200).json({
@@ -78,6 +99,7 @@ module.exports = {
                     nmDPJP: nmDPJP,
                     sttrawat,
                     getdpjp_ranap,
+                    tensi
                 }
             });
 
