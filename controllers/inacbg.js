@@ -72,11 +72,10 @@ module.exports = {
                         tensi: item.tensi
                     };
                 });
-                console.log(dataTensi.length);
+
                 for (let i = 0; i < dataTensi.length; i++) {
                     if (dataTensi[i].tensi != "") {
                         hasilTensi = dataTensi[i].tensi;
-                        // console.log(dataTensi);
                         continue
                     } else {
 
@@ -96,7 +95,7 @@ module.exports = {
                 tgl_keluar: letkamarInap[letkamarInap.length - 1].tgl_keluar,
                 stts_pulang: letkamarInap[letkamarInap.length - 1].stts_pulang
             }
-            console.log(sttrawat);
+
             let prosedur_non_bedah = await billing.findAll({
                 attributes: [[sequelize.fn('sum', sequelize.col('totalbiaya')), 'totalbiaya']],
                 where: {
@@ -130,8 +129,6 @@ module.exports = {
                     status: 'Ranap Paramedis'
                 }
             })
-            console.log(keperawatan);
-
             if (keperawatan == null) {
                 keperawatan = 0;
             }
@@ -187,6 +184,118 @@ module.exports = {
 
         } catch (err) {
             console.log(err)
+            return res.status(400).json({
+                status: false,
+                message: 'Bad Request',
+                data: err
+            });
+        }
+    },
+    bilingRalan: async (req, res) => {
+        try {
+            let no_rawat = req.query.no_rawat;
+            // 1. Prosedur Non Bedah (Ralan & Ranap Dokter Paramedis, exclude 'terapi')
+            let prosedur_non_bedah = await billing.findAll({
+                attributes: [[sequelize.fn('sum', sequelize.col('totalbiaya')), 'totalbiaya']],
+                where: {
+                    no_rawat: no_rawat,
+                    status: 'Ralan Dokter Paramedis',
+                    nm_perawatan: {
+                        [Op.notLike]: '%terapi%'
+                    }
+                },
+                group: ['no_rawat'],
+                having: {
+                    totalbiaya: {
+                        [Op.eq]: [sequelize.fn('sum', sequelize.col('totalbiaya')), '0', null]
+                    }
+                }
+            })
+            let totalBiayaNonBedah = prosedur_non_bedah.length > 0 ? prosedur_non_bedah[0].totalbiaya : 0;
+
+            // 2. Prosedur Bedah
+            let prosedur_bedah = 0;
+
+            // 3. Konsultasi (Ranap & Ralan Dokter)
+            let konsultasi = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: ['Ranap Dokter', 'Ralan Dokter'] }
+            }) || 0;
+
+            // 4. Tenaga Ahli (Hardcoded 0 sesuai source)
+            let tenaga_ahli = 0;
+
+            // 5. Keperawatan (Ranap & Ralan Paramedis)
+            let keperawatan = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: ['Ralan Paramedis'] }
+            }) || 0;
+
+            // 6. Radiologi
+            let radiologi = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: 'Radiologi' }
+            }) || 0;
+
+            // 7. Laboratorium
+            let laboratorium = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: 'Laborat' }
+            }) || 0;
+
+            const dataReg = await reg_periksa.findOne({
+                attributes: ['biaya_reg'],
+                where: { no_rawat }
+            });
+            let kamar = parseFloat(dataReg?.biaya_reg || 0);
+
+            // 9. Obat, Kronis, & Kemoterapi
+            let obat_kronis = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: 'Obat', nm_perawatan: { [Op.like]: '%kronis%' } }
+            }) || 0;
+
+            let obat_kemoterapi = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: 'Obat', nm_perawatan: { [Op.like]: '%kemo%' } }
+            }) || 0;
+
+            let total_obat_raw = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: ['Obat', 'Retur Obat', 'Resep Pulang'] }
+            }) || 0;
+
+            let obat = parseFloat(total_obat_raw) - parseFloat(obat_kronis) - parseFloat(obat_kemoterapi);
+
+            // 10. BMHP (Tambahan)
+            let bmhp = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: 'Tambahan' }
+            }) || 0;
+
+            // 11. Sewa Alat (Harian & Service)
+            let sewa_alat = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: ['Harian', 'Service'] }
+            }) || 0;
+
+            // 12. Rehabilitasi (Ralan & Ranap Dokter Paramedis, include 'terapi')
+            let rehabilitasi = await billing.sum('totalbiaya', {
+                where: {
+                    no_rawat,
+                    status: ['Ralan Dokter Paramedis', 'Ranap Dokter Paramedis'],
+                    nm_perawatan: { [Op.like]: '%terapi%' }
+                }
+            }) || 0;
+            return res.status(200).json({
+                status: true,
+                message: 'Data billing ralan',
+                data: {
+                    biaya: {
+                        totalBiayaNonBedah,
+                        prosedur_bedah,
+                        konsultasi,
+                        tenaga_ahli: 0,
+                        keperawatan,
+                        radiologi,
+                        laboratorium,
+                        kamar
+                    }
+                }
+            });
+        } catch (err) {
+            console.log(err);
             return res.status(400).json({
                 status: false,
                 message: 'Bad Request',
