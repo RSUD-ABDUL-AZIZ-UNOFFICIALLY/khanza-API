@@ -1,5 +1,5 @@
 const { callEklaim } = require('../helpers/api');
-const { penjab, poliklinik, pasien, dokter, icd10, icd9, penyakit, kategori_penyakit, pemeriksaan_ranap, kamar_inap, dpjp_ranap, bridging_sep, reg_periksa, diagnosa_pasien, prosedur_pasien, sequelize } = require('../models');
+const { penjab, poliklinik, pasien, dokter, icd10, icd9, penyakit, kategori_penyakit, billing, pemeriksaan_ranap, kamar_inap, dpjp_ranap, bridging_sep, reg_periksa, diagnosa_pasien, prosedur_pasien, sequelize } = require('../models');
 const { Op, where } = require("sequelize");
 module.exports = {
     ws: async (req, res) => {
@@ -64,19 +64,24 @@ module.exports = {
                     no_rawat: req.query.no_rawat
                 },
             })
-            let dataTensi = '110/60';
+            console.log(tensi);
+            let hasilTensi = '110/60';
             if (tensi.length > 0) {
                 let dataTensi = tensi.map(item => {
                     return {
                         tensi: item.tensi
                     };
                 });
-                tensi = dataTensi;
-                for (let i = 0; i < tensi.length; i++) {
-                    if (tensi[i].tensi != "") {
-                        dataTensi = tensi[i].tensi;
-                        return
+                console.log(dataTensi.length);
+                for (let i = 0; i < dataTensi.length; i++) {
+                    if (dataTensi[i].tensi != "") {
+                        hasilTensi = dataTensi[i].tensi;
+                        // console.log(dataTensi);
+                        continue
+                    } else {
+
                     }
+                    continue
                 }
             }
             if (letkamarInap[letkamarInap.length - 1].tgl_keluar == '0000-00-00') {
@@ -91,6 +96,69 @@ module.exports = {
                 tgl_keluar: letkamarInap[letkamarInap.length - 1].tgl_keluar,
                 stts_pulang: letkamarInap[letkamarInap.length - 1].stts_pulang
             }
+            console.log(sttrawat);
+            let prosedur_non_bedah = await billing.findAll({
+                attributes: [[sequelize.fn('sum', sequelize.col('totalbiaya')), 'totalbiaya']],
+                where: {
+                    no_rawat: no_rawat,
+                    status: 'Ranap Dokter Paramedis',
+                    nm_perawatan: {
+                        [Op.notLike]: '%terapi%'
+                    }
+                },
+                group: ['no_rawat'],
+                having: {
+                    totalbiaya: {
+                        [Op.eq]: [sequelize.fn('sum', sequelize.col('totalbiaya')), '0', null]
+                    }
+                }
+            })
+            let totalBiayaNonBedah = prosedur_non_bedah.length > 0 ? prosedur_non_bedah[0].totalbiaya : 0;
+            let prosedur_bedah = await billing.sum('totalbiaya', {
+                where: {
+                    no_rawat,
+                    status: 'Operasi'
+                }
+            }) || 0;
+            let konsultasi = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: 'Ranap Dokter' }
+            }) || 0;
+
+            let keperawatan = await billing.sum('totalbiaya', {
+                where: {
+                    no_rawat,
+                    status: 'Ranap Paramedis'
+                }
+            })
+            console.log(keperawatan);
+
+            if (keperawatan == null) {
+                keperawatan = 0;
+            }
+
+
+            // 3. Radiologi
+            let radiologi = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: 'Radiologi' }
+            }) || 0;
+
+            // 4. Laboratorium
+            let laboratorium = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: 'Laborat' }
+            }) || 0;
+
+            // 5. Kamar (Billing Kamar + Biaya Registrasi)
+            const billingKamar = await billing.sum('totalbiaya', {
+                where: { no_rawat, status: 'Kamar' }
+            }) || 0;
+
+            const dataReg = await reg_periksa.findOne({
+                attributes: ['biaya_reg'],
+                where: { no_rawat }
+            });
+
+            let kamar = parseFloat(billingKamar) + parseFloat(dataReg?.biaya_reg || 0);
+
 
             return res.status(200).json({
                 status: true,
@@ -99,9 +167,23 @@ module.exports = {
                     nmDPJP: nmDPJP,
                     sttrawat,
                     getdpjp_ranap,
-                    tensi
+                    hasilTensi,
+                    biaya: {
+                        totalBiayaNonBedah,
+                        prosedur_bedah,
+                        konsultasi,
+                        tenaga_ahli: 0,
+                        keperawatan,
+                        radiologi,
+                        laboratorium,
+                        kamar
+
+
+                    }
+
                 }
             });
+
 
         } catch (err) {
             console.log(err)
