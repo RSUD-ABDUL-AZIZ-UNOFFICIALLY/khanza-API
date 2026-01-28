@@ -1,5 +1,5 @@
 const { callEklaim } = require('../helpers/api');
-const { penjab, poliklinik, pasien, dokter, icd10, icd9, penyakit, kategori_penyakit, billing, pemeriksaan_ranap, kamar_inap, dpjp_ranap, bridging_sep, reg_periksa, diagnosa_pasien, prosedur_pasien, sequelize } = require('../models');
+const { penjab, poliklinik, pasien, dokter, icd10, icd9, penyakit, kategori_penyakit, pemeriksaan_ralan, billing, pemeriksaan_ranap, kamar_inap, dpjp_ranap, bridging_sep, reg_periksa, diagnosa_pasien, prosedur_pasien, sequelize } = require('../models');
 const { Op, where } = require("sequelize");
 module.exports = {
     ws: async (req, res) => {
@@ -315,6 +315,29 @@ module.exports = {
                     nm_perawatan: { [Op.like]: '%terapi%' }
                 }
             }) || 0;
+            let tensi = await pemeriksaan_ralan.findAll({
+                where: {
+                    no_rawat: req.query.no_rawat
+                },
+            })
+            let hasilTensi = '110/60';
+            if (tensi.length > 0) {
+                let dataTensi = tensi.map(item => {
+                    return {
+                        tensi: item.tensi
+                    };
+                });
+
+                for (let i = 0; i < dataTensi.length; i++) {
+                    if (dataTensi[i].tensi != "") {
+                        hasilTensi = dataTensi[i].tensi;
+                        continue
+                    } else {
+
+                    }
+                    continue
+                }
+            }
             return res.status(200).json({
                 status: true,
                 message: 'Data billing ralan',
@@ -332,7 +355,8 @@ module.exports = {
                         bmhp,
                         sewa_alat,
                         rehabilitasi
-                    }
+                    },
+                    hasilTensi
                 }
             });
         } catch (err) {
