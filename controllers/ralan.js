@@ -2448,6 +2448,8 @@ module.exports = {
                 let ralanDPJPUtama = [];
                 // console.log(raberDPJP);
                 for (let e of getData) {
+                    // IF Pending Uncommnet
+                    // e.biaya.bySetujui = parseInt(e.biaya.byTarifGruper); 
                     let raber = raberDPJP.filter(item => item.no_rawat === e.no_rawat);
                     e.jumlahRaber = raber.length;
 
