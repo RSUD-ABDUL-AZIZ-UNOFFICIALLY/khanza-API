@@ -16,6 +16,7 @@ routes.get('/drpoli', middleware.check, ralan.getDrPoli);
 routes.get('/antiran/poli', middleware.check, ralan.getAntiranPoli);
 routes.get('/pemeriksaan', middleware.check, ralan.getPemeriksaan);
 routes.post('/pemeriksaan', middleware.check, ralan.postPemeriksaan);
+routes.put('/pemeriksaan', middleware.check, ralan.updatePemeriksaan);
 routes.get('/pemeriksaan/riwayat', middleware.check, ralan.getRiwayatPemeriksaan);
 
 

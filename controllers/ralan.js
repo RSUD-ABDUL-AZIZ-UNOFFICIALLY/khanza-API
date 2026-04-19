@@ -380,6 +380,35 @@ module.exports = {
 
         }
     },
+    updatePemeriksaan: async (req, res) => {
+        try {
+            let data = req.body;
+            if (!data.no_rawat || !data.tgl_perawatan || !data.jam_rawat || !data.nip || !data.keluhan || !data.pemeriksaan || !data.alergi || !data.penilaian || !data.instruksi || !data.evaluasi) {
+                return res.status(400).json({
+                    status: false,
+                    message: 'Data tidak lengkap',
+                    data: 'required field: no_rawat, tgl_perawatan, jam_rawat, nip, keluhan, pemeriksaan, alergi, penilaian, instruksi, evaluasi'
+                });
+            }
+            if (data.kesadaran == null) {
+                data.kesadaran = 'Compos Mentis';
+            }
+            let dataPemeriksaan = await pemeriksaan_ralan.update(data, { where: { no_rawat: data.no_rawat, nip: data.nip, tgl_perawatan: data.tgl_perawatan, jam_rawat: data.jam_rawat } });
+            return res.status(200).json({
+                status: true,
+                message: 'Data pemeriksaan berhasil disimpan',
+                data: dataPemeriksaan,
+            });
+        } catch (err) {
+            console.log(err);
+            return res.status(400).json({
+                status: false,
+                message: 'Data pemeriksaan gagal disimpan',
+                data: err.message
+            });
+
+        }
+    },
     getRiwayatPemeriksaan: async (req, res) => {
         try {
             let query = req.query;
