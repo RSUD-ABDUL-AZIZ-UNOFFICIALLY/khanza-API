@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: simrs-webService
+    ports:
+      - "3000:8000"
+    volumes:
+      - .:/usr/src/app
+    environment:
+      - .env
