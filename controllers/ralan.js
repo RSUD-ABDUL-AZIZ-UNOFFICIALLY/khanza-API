@@ -379,6 +379,60 @@ module.exports = {
             });
 
         }
-    }
+    },
+    getRiwayatPemeriksaan: async (req, res) => {
+        try {
+            let query = req.query;
+            let paramquery = {
+                no_rkm_medis: query.no_rkm_medis,
+                tgl_registrasi: query.from && query.until ? { [Op.between]: [query.from, query.until] } : { [Op.startsWith]: '' },
+                no_rawat: { [Op.startsWith]: query.no_rawat ? query.no_rawat : '' },
+                kd_poli: { [Op.startsWith]: query.kd_poli ? query.kd_poli : '' },
+                status_lanjut: 'Ralan'
+            };
+            let dataRegPriksa = await reg_periksa.findAll({
+                attributes: ['no_rawat'],
+                where: paramquery,
+                include: [
+                    {
+                        model: pemeriksaan_ralan,
+                        as: 'pemeriksaan_ralan',
+                        include: [
+                            {
+                                model: pegawai,
+                                as: 'pegawai',
+                                attributes: ['nama']
+                            }],
+                        order: [
+                            ['no_rawat', 'ASC'],
+                        ],
+                    },
+
+                ]
+            })
+            let dataSoap = [];
+            for (let x of dataRegPriksa) {
+                if (x.pemeriksaan_ralan.length > 0) {
+                    dataSoap.push(...x.pemeriksaan_ralan);
+                }
+            }
+            return res.status(200).json({
+                status: true,
+                message: 'Data pemeriksaan',
+                record: dataRegPriksa.length,
+                recordPemeriksaan: dataSoap.length,
+                data: dataSoap
+            });
+
+        } catch (err) {
+            console.log(err);
+            return res.status(400).json({
+                status: false,
+                message: 'Bad Request',
+                data: err.message
+            });
+
+        }
+    },
 
 }
