@@ -44,6 +44,9 @@ module.exports = {
     getPoli: async (req, res) => {
         try {
             let dataPoliklinik = await poliklinik.findAll({
+                where: {
+                    status: '1'
+                },
                 attributes: ['kd_poli', 'nm_poli'],
             });
             return res.status(200).json({

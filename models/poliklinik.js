@@ -26,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
     },
     nm_poli: DataTypes.STRING,
+    status: DataTypes.ENUM('0', '1')
    
   }, {
     sequelize,
