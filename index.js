@@ -4,6 +4,7 @@ const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const app = express();
+const path = require('path');
 
 app.use(express.json());
 app.use(morgan('dev'));
@@ -49,6 +50,8 @@ app.use('/api/views', views);
 app.use('/api/registrasi', require('./routes/registrasi'));
 app.use('/api/users', require('./routes/user'));
 app.use('/api/inacbg', require('./routes/inacbg'));
+
+app.use("/api/pages/upload/", express.static(path.join(__dirname + process.env.DIRETORY_FILE)));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

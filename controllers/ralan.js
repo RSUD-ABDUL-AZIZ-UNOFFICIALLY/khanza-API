@@ -1,5 +1,5 @@
 'use strict';
-const { reg_periksa, pasien, dokter, poliklinik, jadwal, pegawai, pemeriksaan_ralan } = require('../models');
+const { reg_periksa, pasien, dokter, poliklinik, jadwal, pegawai, pemeriksaan_ralan, master_berkas_digital, berkas_digital_perawatan } = require('../models');
 const { Op } = require("sequelize");
 module.exports = {
     getIGD: async (req, res) => {
@@ -454,6 +454,57 @@ module.exports = {
                 record: dataRegPriksa.length,
                 recordPemeriksaan: dataSoap.length,
                 data: dataSoap
+            });
+
+        } catch (err) {
+            console.log(err);
+            return res.status(400).json({
+                status: false,
+                message: 'Bad Request',
+                data: err.message
+            });
+
+        }
+    },
+    getBerkasRiwayat: async (req, res) => {
+        try {
+            let query = req.query;
+            let paramquery = {
+                no_rkm_medis: query.no_rkm_medis
+            };
+            let dataRegPriksa = await reg_periksa.findAll({
+                attributes: ['no_rawat'],
+                where: paramquery,
+                include: [
+                    {
+                        model: berkas_digital_perawatan,
+                        as: 'berkas_digital_perawatan',
+                        include: [
+                            {
+                                model: master_berkas_digital,
+                                as: 'master_berkas_digital',
+                                attributes: ['nama']
+                            }
+                        ]
+                    }
+                ]
+            })
+            let databerkas = [];
+            for (let x of dataRegPriksa) {
+                if (x.berkas_digital_perawatan.length > 0) {
+                    databerkas.push(...x.berkas_digital_perawatan);
+
+                }
+            }
+            for (let x of databerkas) {
+                x.lokasi_file = '/api/' + x.lokasi_file;
+            }
+
+            return res.status(200).json({
+                status: true,
+                message: 'Data pemeriksaan',
+                record: databerkas.length,
+                data: databerkas
             });
 
         } catch (err) {
