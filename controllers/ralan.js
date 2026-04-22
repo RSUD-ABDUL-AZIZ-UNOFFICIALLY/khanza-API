@@ -438,19 +438,7 @@ module.exports = {
                         order: [
                             ['no_rawat', 'ASC'],
                         ],
-                    },
-                    {
-                        model: berkas_digital_perawatan,
-                        as: 'berkas_digital_perawatan',
-                        include: [
-                            {
-                                model: master_berkas_digital,
-                                as: 'master_berkas_digital',
-                                attributes: ['nama']
-                            }
-                        ]
                     }
-
                 ]
             })
             let dataSoap = [];
@@ -459,19 +447,12 @@ module.exports = {
                     dataSoap.push(...x.pemeriksaan_ralan);
                 }
             }
-            for (let x of dataSoap) {
-                if (x.berkas_digital_perawatan.length > 0) {
-                    for (let y of x.berkas_digital_perawatan) {
-                        y.lokasi_file = '/api/' + y.lokasi_file;
-                    }
-                }
-            }
 
             return res.status(200).json({
                 status: true,
                 message: 'Data pemeriksaan',
                 record: dataRegPriksa.length,
-                recordPemeriksaan: dataSoap.length,
+                recordPemeriksaan: dataRegPriksa,
                 data: dataSoap
             });
 
