@@ -11,16 +11,3 @@ services:
       - /opt/lampp/htdocs/webapps/berkasrawat/pages/upload/:/usr/src/app/public/uploads
     environment:
       - .env
-
-     db.createUser(
-        {
-           user: "admin",
-           pwd: "strong_password_pi", // Replace with a strong password
-           roles: [
-              { role: "userAdminAnyDatabase", db: "admin" },
-              { role: "dbAdminAnyDatabase", db: "admin" },
-              { role: "readWriteAnyDatabase", db: "admin" },
-              { role: "clusterAdmin", db: "admin" } // Optional, for cluster administration
-           ]
-        }
-     )
