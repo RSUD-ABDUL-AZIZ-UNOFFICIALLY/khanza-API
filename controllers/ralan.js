@@ -439,6 +439,17 @@ module.exports = {
                             ['no_rawat', 'ASC'],
                         ],
                     },
+                    {
+                        model: berkas_digital_perawatan,
+                        as: 'berkas_digital_perawatan',
+                        include: [
+                            {
+                                model: master_berkas_digital,
+                                as: 'master_berkas_digital',
+                                attributes: ['nama']
+                            }
+                        ]
+                    }
 
                 ]
             })
@@ -448,6 +459,12 @@ module.exports = {
                     dataSoap.push(...x.pemeriksaan_ralan);
                 }
             }
+            for (let x of dataSoap) {
+                for (let y of x.berkas_digital_perawatan) {
+                    y.lokasi_file = '/api/' + y.lokasi_file;
+                }
+            }
+
             return res.status(200).json({
                 status: true,
                 message: 'Data pemeriksaan',
