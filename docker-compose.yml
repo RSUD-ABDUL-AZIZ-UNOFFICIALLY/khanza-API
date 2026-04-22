@@ -8,6 +8,7 @@ services:
       - "8000:3000"
     volumes:
       - .:/usr/src/app
+      - /opt/lampp/htdocs/webapps/berkasrawat/pages/upload/:/usr/src/app/public/uploads
     environment:
       - .env
 

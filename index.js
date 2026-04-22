@@ -51,7 +51,7 @@ app.use('/api/registrasi', require('./routes/registrasi'));
 app.use('/api/users', require('./routes/user'));
 app.use('/api/inacbg', require('./routes/inacbg'));
 
-app.use("/api/pages/upload/", express.static(path.join(__dirname + process.env.DIRETORY_FILE)));
+app.use("/api/pages/upload/", express.static(path.join(__dirname + '/public/uploads/')));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
