@@ -460,8 +460,10 @@ module.exports = {
                 }
             }
             for (let x of dataSoap) {
-                for (let y of x.berkas_digital_perawatan) {
-                    y.lokasi_file = '/api/' + y.lokasi_file;
+                if (x.berkas_digital_perawatan.length > 0) {
+                    for (let y of x.berkas_digital_perawatan) {
+                        y.lokasi_file = '/api/' + y.lokasi_file;
+                    }
                 }
             }
 
