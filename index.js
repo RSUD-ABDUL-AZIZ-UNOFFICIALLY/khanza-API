@@ -2,13 +2,13 @@
 require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
-const cors = require('cors');
+// const cors = require('cors');
 const app = express();
 const path = require('path');
 
 app.use(express.json());
 app.use(morgan('dev'));
-app.use(cors());
+// app.use(cors());
 const { createClient } = require('redis');
 const client = createClient({
     password: process.env.REDIS_PASSWORD,
