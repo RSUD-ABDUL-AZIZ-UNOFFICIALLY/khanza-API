@@ -514,6 +514,14 @@ module.exports = {
                 data: "required field: periode: yyyy-mm",
             });
         }
+        let getcache = await req.cache.json.get(`API-Khnza:BOR:${periode}:${kd_bangsal}`, '$');
+        if (getcache) {
+            return res.status(200).json({
+                status: true,
+                message: "Data BOR",
+                data: getcache,
+            });
+        }
         let jumlah_hari = new Date(year, month, 0).getDate();
         let getBed = await kamar.findAll({
             attributes: ['kd_kamar'],
@@ -536,10 +544,9 @@ module.exports = {
             pasien_keluar += databed.Pasien_Keluar || 0
             total_lama += databed.total_lama || 0
         }
-        return res.status(200).json({
-            status: true,
-            message: "Data BOR",
+        let hasil = {
             periode: periode,
+            kd_bangsal: kd_bangsal,
             jumlah_hari: jumlah_hari,
             jumlah_tempat_tidur: jumlah_tempat_tidur,
             hari_perawatan: hari_perawatan,
@@ -548,7 +555,14 @@ module.exports = {
             BOR: (hari_perawatan / (jumlah_hari * jumlah_tempat_tidur)).toFixed(2),
             AVLOS: (total_lama / pasien_keluar).toFixed(2),
             TOI: (((jumlah_tempat_tidur * jumlah_hari) - hari_perawatan) / pasien_keluar).toFixed(2),
-            BTO: (pasien_keluar / jumlah_tempat_tidur).toFixed(2),
+            BTO: (pasien_keluar / jumlah_tempat_tidur).toFixed(2)
+        }
+        await req.cache.json.set(`API-Khnza:BOR:${periode}:${kd_bangsal}`, '$', hasil);
+        await req.cache.expire(`API-Khnza:BOR:${periode}:${kd_bangsal}`, 3600 * 24);
+        return res.status(200).json({
+            status: true,
+            message: "Data BOR",
+            data: hasil,
             rawDUM
         });
 
