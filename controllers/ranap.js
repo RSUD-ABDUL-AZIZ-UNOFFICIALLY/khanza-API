@@ -1,5 +1,6 @@
 'use strict';
 const { reg_periksa, pasien, kamar_inap, kamar, bangsal, pemeriksaan_ranap, dpjp_ranap, pegawai } = require('../models');
+const { getbedinfo } = require('../helpers/beds');
 const { Op } = require("sequelize");
 module.exports = {
     getRanap: async (req, res) => {
@@ -495,6 +496,62 @@ module.exports = {
                 data: err,
             });
         }    
+    },
+    getBOR: async (req, res) => {
+        let { periode, kd_bangsal } = req.query;
+        if (!periode) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request",
+                data: "required field: periode tahun-bulan",
+            });
+        }
+        let [year, month] = periode.split('-');
+        if (!year || !month) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request",
+                data: "required field: periode: yyyy-mm",
+            });
+        }
+        let jumlah_hari = new Date(year, month, 0).getDate();
+        let getBed = await kamar.findAll({
+            attributes: ['kd_kamar'],
+            where: {
+                kd_bangsal: kd_bangsal,
+                statusdata: '1'
+            }
+        })
+        // let databed = await getbedinfo(periode, 'KELINCI.12');
+        let jumlah_tempat_tidur = getBed.length;
+        let hari_perawatan = 0;
+        let pasien_keluar = 0;
+        let total_lama = 0;
+        let rawDUM = [];
+        for (let x of getBed) {
+            let databed = await getbedinfo(periode, x.kd_kamar);
+            console.log(databed);
+            rawDUM.push(databed);
+            hari_perawatan += databed.hari_perawatan || 0
+            pasien_keluar += databed.Pasien_Keluar || 0
+            total_lama += databed.total_lama || 0
+        }
+        return res.status(200).json({
+            status: true,
+            message: "Data BOR",
+            periode: periode,
+            jumlah_hari: jumlah_hari,
+            jumlah_tempat_tidur: jumlah_tempat_tidur,
+            hari_perawatan: hari_perawatan,
+            pasien_keluar: pasien_keluar,
+            total_lama: total_lama,
+            BOR: (hari_perawatan / (jumlah_hari * jumlah_tempat_tidur)).toFixed(2),
+            AVLOS: (total_lama / pasien_keluar).toFixed(2),
+            TOI: (((jumlah_tempat_tidur * jumlah_hari) - hari_perawatan) / pasien_keluar).toFixed(2),
+            BTO: (pasien_keluar / jumlah_tempat_tidur).toFixed(2),
+            rawDUM
+        });
+
     }
 
 }

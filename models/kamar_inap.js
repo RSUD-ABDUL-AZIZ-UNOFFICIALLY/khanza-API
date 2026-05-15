@@ -35,7 +35,7 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
     },
     tgl_masuk: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       primaryKey: true,
     },
     jam_masuk: {

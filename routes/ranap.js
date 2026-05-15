@@ -13,6 +13,7 @@ routes.get('/belumpulang', middleware.check, ranap.getBelumPulang);
 routes.get('/dasboard/belumpulang', middleware.check, dashboard.getKamarInap);
 routes.get('/dasboard/belumpulangbykelas', middleware.check, dashboard.getKamarInapbyKelas);
 routes.get('/pasien/dpjp', ranap.getPxdpjp);
+routes.get('/kamar/bor', ranap.getBOR);
 
 routes.get('/pemeriksaan', middleware.check, ranap.getPemeriksaan);
 
