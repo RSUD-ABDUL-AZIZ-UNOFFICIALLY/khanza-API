@@ -42,7 +42,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TIME,
       primaryKey: true,
     },
-    tgl_keluar: DataTypes.DATE,
+    tgl_keluar: DataTypes.DATEONLY,
     jam_keluar: DataTypes.TIME,
     trf_kamar: DataTypes.DOUBLE,
     lama: DataTypes.DOUBLE,
