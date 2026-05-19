@@ -1,0 +1,469 @@
+{
+  "info": {
+    "name": "Khanza API - ICD Endpoints",
+    "description": "Collection untuk testing Khanza Hospital Management API - ICD endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "ICD-10 Endpoints",
+      "item": [
+        {
+          "name": "Search ICD-10",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/10?search=hypertension&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "10"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "hypertension"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get ICD-10 Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/10/I10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "10", "I10"]
+            }
+          }
+        },
+        {
+          "name": "Get Recap ICD-10",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/recap/10?from=2024-01-01&until=2024-12-31&status_rawat=Selesai",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "recap", "10"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "until",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "status_rawat",
+                  "value": "Selesai"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ICD-9 Endpoints",
+      "item": [
+        {
+          "name": "Search ICD-9",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/9?search=diabetes&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "9"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "diabetes"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get ICD-9 Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/9/250.00",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "9", "250.00"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ICD-9 Recap (NEW)",
+      "item": [
+        {
+          "name": "Get Most Used ICD-9 - Default Limit",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/recap/9?from=2024-01-01&until=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "recap", "9"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "until",
+                  "value": "2024-12-31"
+                }
+              ]
+            },
+            "description": "Get 10 most used ICD-9 codes (default limit)"
+          }
+        },
+        {
+          "name": "Get Most Used ICD-9 - Custom Limit",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/recap/9?from=2024-01-01&until=2024-12-31&limit=25",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "recap", "9"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "until",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            },
+            "description": "Get 25 most used ICD-9 codes"
+          }
+        },
+        {
+          "name": "Get Most Used ICD-9 - Short Period",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/recap/9?from=2024-06-01&until=2024-06-30&limit=15",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "recap", "9"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2024-06-01"
+                },
+                {
+                  "key": "until",
+                  "value": "2024-06-30"
+                },
+                {
+                  "key": "limit",
+                  "value": "15"
+                }
+              ]
+            },
+            "description": "Get top 15 ICD-9 codes for June 2024"
+          }
+        },
+        {
+          "name": "Q1 2024 Analysis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/recap/9?from=2024-01-01&until=2024-03-31&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "recap", "9"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "until",
+                  "value": "2024-03-31"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Q1 2024 Analysis"
+          }
+        },
+        {
+          "name": "Q2 2024 Analysis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/recap/9?from=2024-04-01&until=2024-06-30&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "recap", "9"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2024-04-01"
+                },
+                {
+                  "key": "until",
+                  "value": "2024-06-30"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Q2 2024 Analysis"
+          }
+        },
+        {
+          "name": "Q3 2024 Analysis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/recap/9?from=2024-07-01&until=2024-09-30&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "recap", "9"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2024-07-01"
+                },
+                {
+                  "key": "until",
+                  "value": "2024-09-30"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Q3 2024 Analysis"
+          }
+        },
+        {
+          "name": "Q4 2024 Analysis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/recap/9?from=2024-10-01&until=2024-12-31&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "recap", "9"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2024-10-01"
+                },
+                {
+                  "key": "until",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Q4 2024 Analysis"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Error Test Cases",
+      "item": [
+        {
+          "name": "Missing Parameters",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/recap/9",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "recap", "9"]
+            },
+            "description": "Should return 422 error - missing from & until"
+          }
+        },
+        {
+          "name": "Missing 'from' Parameter",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/recap/9?until=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "recap", "9"],
+              "query": [
+                {
+                  "key": "until",
+                  "value": "2024-12-31"
+                }
+              ]
+            },
+            "description": "Should return 422 error - missing from"
+          }
+        },
+        {
+          "name": "Limit Exceeds Maximum",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/icd/recap/9?from=2024-01-01&until=2024-12-31&limit=200",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "icd", "recap", "9"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "until",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "limit",
+                  "value": "200"
+                }
+              ]
+            },
+            "description": "Limit > 100 should be capped at 100"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_JWT_TOKEN_HERE",
+      "type": "string"
+    }
+  ]
+}

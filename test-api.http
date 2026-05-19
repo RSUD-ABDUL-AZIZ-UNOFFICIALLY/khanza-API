@@ -1,0 +1,133 @@
+### ===== KHANZA API TEST FILE =====
+### REST Client Extension for VS Code
+### Install: REST Client by Huachao Mao
+### Usage: Click "Send Request" above each request block
+
+### ===== ENVIRONMENT VARIABLES =====
+@baseUrl = http://localhost:3000
+@token = YOUR_JWT_TOKEN_HERE
+@contentType = application/json
+
+### ===== ICD-10 TESTS =====
+
+### 1. Search ICD-10 by keyword
+GET {{baseUrl}}/api/icd/10?search=hypertension&limit=5
+Authorization: Bearer {{token}}
+
+
+### 2. Get ICD-10 Detail by ID
+GET {{baseUrl}}/api/icd/10/I10
+Authorization: Bearer {{token}}
+
+
+### 3. Get Recap ICD-10 by Date Range
+GET {{baseUrl}}/api/icd/recap/10?from=2024-01-01&until=2024-12-31&status_rawat=Selesai
+Authorization: Bearer {{token}}
+
+
+### ===== ICD-9 TESTS =====
+
+### 4. Search ICD-9 by keyword
+GET {{baseUrl}}/api/icd/9?search=diabetes&limit=10
+Authorization: Bearer {{token}}
+
+
+### 5. Get ICD-9 Detail by ID
+GET {{baseUrl}}/api/icd/9/250.00
+Authorization: Bearer {{token}}
+
+
+### 6. Get Most Used ICD-9 Codes (NEW) - Date Range Only
+GET {{baseUrl}}/api/icd/recap/9?from=2024-01-01&until=2024-12-31
+Authorization: Bearer {{token}}
+
+
+### 7. Get Most Used ICD-9 Codes - With Custom Limit
+GET {{baseUrl}}/api/icd/recap/9?from=2024-01-01&until=2024-12-31&limit=25
+Authorization: Bearer {{token}}
+
+
+### 8. Get Most Used ICD-9 Codes - Short Date Range
+GET {{baseUrl}}/api/icd/recap/9?from=2024-06-01&until=2024-06-30&limit=15
+Authorization: Bearer {{token}}
+
+
+### ===== ERROR TEST CASES =====
+
+### 9. Missing Required Parameters
+GET {{baseUrl}}/api/icd/recap/9
+Authorization: Bearer {{token}}
+
+
+### 10. Missing From Parameter
+GET {{baseUrl}}/api/icd/recap/9?until=2024-12-31
+Authorization: Bearer {{token}}
+
+
+### 11. Missing Until Parameter
+GET {{baseUrl}}/api/icd/recap/9?from=2024-01-01
+Authorization: Bearer {{token}}
+
+
+### 12. Invalid Date Format
+GET {{baseUrl}}/api/icd/recap/9?from=01-01-2024&until=31-12-2024
+Authorization: Bearer {{token}}
+
+
+### 13. Limit Exceeds Maximum
+GET {{baseUrl}}/api/icd/recap/9?from=2024-01-01&until=2024-12-31&limit=200
+Authorization: Bearer {{token}}
+
+
+### ===== BATCH TESTS FOR DIFFERENT PERIODS =====
+
+### 14. Year 2024 - Q1
+GET {{baseUrl}}/api/icd/recap/9?from=2024-01-01&until=2024-03-31&limit=10
+Authorization: Bearer {{token}}
+
+
+### 15. Year 2024 - Q2
+GET {{baseUrl}}/api/icd/recap/9?from=2024-04-01&until=2024-06-30&limit=10
+Authorization: Bearer {{token}}
+
+
+### 16. Year 2024 - Q3
+GET {{baseUrl}}/api/icd/recap/9?from=2024-07-01&until=2024-09-30&limit=10
+Authorization: Bearer {{token}}
+
+
+### 17. Year 2024 - Q4
+GET {{baseUrl}}/api/icd/recap/9?from=2024-10-01&until=2024-12-31&limit=10
+Authorization: Bearer {{token}}
+
+
+### 18. Last 30 Days (Adjust dates as needed)
+GET {{baseUrl}}/api/icd/recap/9?from=2024-11-19&until=2024-12-19&limit=15
+Authorization: Bearer {{token}}
+
+
+### ===== NOTES FOR TESTING =====
+###
+### Before running tests:
+### 1. Update @token with your actual JWT token
+### 2. Ensure server is running on port 3000
+### 3. Update @baseUrl if server is on different host/port
+###
+### How to get JWT Token:
+### - Login to your Khanza system
+### - Copy Authorization header value (everything after "Bearer ")
+### - Paste into @token variable
+###
+### Response Status Codes:
+### - 200: Success
+### - 422: Missing/Invalid parameters
+### - 401: Unauthorized (invalid token)
+### - 404: Not found
+### - 500: Server error
+###
+### Tips:
+### - Click "Send Request" link above each request
+### - Response appears in right panel
+### - Use Ctrl+Alt+R to send last request again
+### - Results are saved in response history
+###

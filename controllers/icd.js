@@ -1,6 +1,6 @@
 'use strict';
 const { icd10,icd9,penyakit,kategori_penyakit, reg_periksa, diagnosa_pasien } = require('../models');
-const { Op } = require("sequelize");
+const { Op, sequelize } = require("sequelize");
 module.exports = {
 geticd10: async (req, res) => {
     try{
@@ -184,6 +184,104 @@ geticd10: async (req, res) => {
                 status: false,
                 message: 'Bad Request',
                 data: err
+            });
+        }
+    },
+    getRecapICD9: async (req, res) => {
+        try {
+            const { from, until, limit } = req.query;
+
+            // Validate required parameters
+            if (!from || !until) {
+                return res.status(422).json({
+                    status: false,
+                    message: 'Parameters "from" and "until" are required (format: YYYY-MM-DD)',
+                    data: null
+                });
+            }
+
+            // Set default and max limit
+            let resultLimit = limit ? parseInt(limit) : 10;
+            if (resultLimit > 100) {
+                resultLimit = 100;
+            }
+
+            // Get patient records within date range
+            const patientRecords = await reg_periksa.findAll({
+                where: {
+                    tgl_registrasi: {
+                        [Op.between]: [from, until]
+                    }
+                },
+                attributes: ['no_rawat'],
+                raw: true
+            });
+
+            // Extract no_rawat from results
+            const recordIds = patientRecords.map(record => record.no_rawat);
+
+            if (recordIds.length === 0) {
+                return res.status(200).json({
+                    status: true,
+                    message: 'No patient records found within date range',
+                    record: 0,
+                    data: []
+                });
+            }
+
+            // Get all diagnoses (ICD-9 codes) for these records
+            const diagnoses = await diagnosa_pasien.findAll({
+                where: {
+                    no_rawat: {
+                        [Op.in]: recordIds
+                    },
+                    status: 'Ralan'  // Only outpatient diagnoses (ICD-9)
+                },
+                attributes: ['kd_penyakit', [sequelize.fn('COUNT', sequelize.col('kd_penyakit')), 'count']],
+                group: ['kd_penyakit'],
+                order: [[sequelize.literal('count'), 'DESC']],
+                limit: resultLimit,
+                raw: true,
+                subQuery: false
+            });
+
+            // Get ICD-9 details for each code
+            const icd9Details = await Promise.all(
+                diagnoses.map(async (diagnosis) => {
+                    const icd9Detail = await icd9.findOne({
+                        where: {
+                            kode: diagnosis.kd_penyakit
+                        },
+                        attributes: ['kode', 'deskripsi_pendek', 'deskripsi_panjang'],
+                        raw: true
+                    });
+
+                    return {
+                        kode: diagnosis.kd_penyakit,
+                        deskripsi_pendek: icd9Detail?.deskripsi_pendek || '-',
+                        deskripsi_panjang: icd9Detail?.deskripsi_panjang || '-',
+                        total_penggunaan: diagnosis.count
+                    };
+                })
+            );
+
+            return res.status(200).json({
+                status: true,
+                message: 'Most used ICD-9 codes within date range',
+                record: icd9Details.length,
+                date_range: {
+                    from: from,
+                    until: until
+                },
+                data: icd9Details
+            });
+
+        } catch (err) {
+            console.error('Error in getRecapICD9:', err);
+            return res.status(500).json({
+                status: false,
+                message: 'Internal Server Error',
+                data: err.message
             });
         }
     }
