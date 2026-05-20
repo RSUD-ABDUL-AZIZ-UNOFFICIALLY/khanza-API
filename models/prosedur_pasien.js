@@ -40,10 +40,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TINYINT,
       allowNull: false,
     },
-    jumlah: {
-      type: DataTypes.STRING(3),
-      allowNull: true,
-    },
+    // jumlah: {
+    //   type: DataTypes.STRING(3),
+    //   allowNull: true,
+    // },
   }, {
     sequelize,
     modelName: 'prosedur_pasien',
