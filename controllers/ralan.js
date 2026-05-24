@@ -1,5 +1,5 @@
 'use strict';
-const { reg_periksa, pasien, dokter, poliklinik, jadwal, pegawai, pemeriksaan_ralan, master_berkas_digital, berkas_digital_perawatan } = require('../models');
+const { reg_periksa, pasien, dokter, poliklinik, jadwal, pegawai, pemeriksaan_ralan, master_berkas_digital, berkas_digital_perawatan, bridging_sep } = require('../models');
 const { Op } = require("sequelize");
 module.exports = {
     getIGD: async (req, res) => {
@@ -84,12 +84,19 @@ module.exports = {
                     as: 'pasien',
                     attributes: ['no_rkm_medis', 'nm_pasien', 'jk', 'tgl_lahir']
                 },
-                {
+                    {
+                        model: bridging_sep,
+                        as: 'bridging_sep',
+                        attributes: ['no_sep'],
+                        required: false
+                    },
+                    {
                     model: dokter,
                     as: 'dokter',
                     attributes: ['kd_dokter', 'nm_dokter'],
                     where: { kd_dokter: { [Op.like]: kd_dokter } }
-                }],
+                    }
+                ],
                 order: [
                     ['no_rawat', 'DESC']
                 ]
