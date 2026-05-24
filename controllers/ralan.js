@@ -449,12 +449,12 @@ module.exports = {
                                 model: pegawai,
                                 as: 'pegawai',
                                 attributes: ['nama']
-                            }],
-                        order: [
-                            ['no_rawat', 'ASC'],
-                        ],
+                            }]
                     }
-                ]
+                ],
+                order: [
+                    ['no_rawat', 'DESC'],
+                ],
             })
             let dataSoap = [];
             for (let x of dataRegPriksa) {
