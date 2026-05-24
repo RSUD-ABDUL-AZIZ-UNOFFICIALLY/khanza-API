@@ -18,7 +18,8 @@ module.exports = {
                     [Op.or]: [
                         { kd_dokter: { [Op.substring]: param.search } },
                         { nm_dokter: { [Op.substring]: param.search } },
-                    ]
+                    ],
+                    status: '1'
                 },
                 limit: parseInt(param.limit)
             });
@@ -49,6 +50,7 @@ module.exports = {
                 include: [{
                     model: spesialis,
                     attributes: ['nm_sps'],
+                    as: 'spesialis'
                 }],
 
             });
@@ -67,7 +69,7 @@ module.exports = {
                 jk: data.jk,
                 tgl_lahir: data.tgl_lahir,
                 no_ijn_praktek: data.no_ijn_praktek,
-                specialis: data.spesiali.nm_sps,
+                specialis: data.spesialis.nm_sps,
             }
             return res.status(200).json({
                 status: true,
@@ -76,6 +78,7 @@ module.exports = {
                 // data: data,
             });
         } catch (error) {
+            console.log(error);
             return res.status(500).json({
                 status: false,
                 message: 'Internal Server Error',
