@@ -68,6 +68,10 @@ module.exports = {
     },
     getPoliByKdPoli: async (req, res) => {
         try {
+            let kd_dokter = req.query.kd_dokter || '%';
+            if (kd_dokter === '-') {
+                kd_dokter = '%';
+            }
             let dataPoliklinik = await reg_periksa.findAll({
                 attributes: ['no_rawat', 'tgl_registrasi', 'jam_reg', 'kd_dokter'],
                 where: {
@@ -83,8 +87,12 @@ module.exports = {
                 {
                     model: dokter,
                     as: 'dokter',
-                    attributes: ['nm_dokter']
+                    attributes: ['kd_dokter', 'nm_dokter'],
+                    where: { kd_dokter: { [Op.like]: kd_dokter } }
                 }],
+                order: [
+                    ['no_rawat', 'DESC']
+                ]
             });
             return res.status(200).json({
                 status: true,
