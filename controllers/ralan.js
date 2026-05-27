@@ -73,6 +73,7 @@ module.exports = {
                 kd_dokter = '%';
             }
             let px = req.query.px || '%';
+
             let dataPoliklinik = await reg_periksa.findAll({
                 attributes: ['no_rawat', 'tgl_registrasi', 'jam_reg', 'kd_dokter'],
                 where: {
@@ -84,7 +85,7 @@ module.exports = {
                     model: pasien,
                     as: 'pasien',
                     where: {
-                        [Op.or]: [{ no_rkm_medis: { [Op.like]: px } }, { nm_pasien: { [Op.like]: px } }]
+                        [Op.or]: [{ no_rkm_medis: { [Op.startsWith]: px } }, { nm_pasien: { [Op.startsWith]: px } }]
                     },
                     attributes: ['no_rkm_medis', 'nm_pasien', 'jk', 'tgl_lahir']
                 },
@@ -98,7 +99,7 @@ module.exports = {
                     model: dokter,
                     as: 'dokter',
                     attributes: ['kd_dokter', 'nm_dokter'],
-                        // where: { kd_dokter: { [Op.like]: kd_dokter } }
+                        where: { kd_dokter: { [Op.like]: kd_dokter } }
                     }
                 ],
                 order: [
