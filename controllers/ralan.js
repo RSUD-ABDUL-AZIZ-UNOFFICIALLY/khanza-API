@@ -511,9 +511,9 @@ module.exports = {
             })
             let databerkas = [];
             for (let x of dataRegPriksa) {
-                if (x.berkas_digital_perawatan.length > 0) {
-                    databerkas.push(...x.berkas_digital_perawatan);
-
+                console.log(x.berkas_digital_perawatan);
+                if (x.berkas_digital_perawatan != null) {
+                    databerkas.push(x.berkas_digital_perawatan);
                 }
             }
             for (let x of databerkas) {
