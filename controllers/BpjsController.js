@@ -512,21 +512,27 @@ const BpjsController = {
         if (cache !== null) {
             return res.json(cache);
         }
-        const bpjs = new Bpjs();
-        const data = bpjs.getSignature();
-        const url = `${process.env['BPJS.baseURL']}/jadwaldokter/kodepoli/${kd_poli}/tanggal/${tanggal}`;
-        const response = await fetch(url, { headers: getHeaders(data) });
-        const bpjsRes = await response.json();
+        try {
+            const bpjs = new Bpjs();
+            const data = bpjs.getSignature();
+            const url = `${process.env['BPJS.baseURL']}/jadwaldokter/kodepoli/${kd_poli}/tanggal/${tanggal}`;
+            const response = await fetch(url, { headers: getHeaders(data) });
+            const bpjsRes = await response.json();
 
-        if (bpjsRes.metadata.code !== "200") return res.json(bpjsRes);
+            if (bpjsRes.metadata.code !== "200") return res.json(bpjsRes);
 
-        const key = data.X_cons_id + data.secretKey + data.timestamp;
-        let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
-        bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
-        req.cache.json.set(`bpjs:getJadwalDokter:${tanggal}:${kd_poli}`, '$', bpjsRes);
-        req.cache.expire(`bpjs:getJadwalDokter:${tanggal}:${kd_poli}`, 60 * 60 * 48);
+            const key = data.X_cons_id + data.secretKey + data.timestamp;
+            let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
+            bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
+            req.cache.json.set(`bpjs:getJadwalDokter:${tanggal}:${kd_poli}`, '$', bpjsRes);
+            req.cache.expire(`bpjs:getJadwalDokter:${tanggal}:${kd_poli}`, 60 * 60 * 48);
 
-        return res.json(bpjsRes);
+            return res.json(bpjsRes);
+
+        } catch (error) {
+            return res.json(error);
+        }
+
     },
 
     async getRefDokter(req, res) {
