@@ -1,6 +1,6 @@
 {
   "name": "simrsgw",
-  "version": "1.4.8",
+  "version": "1.4.9",
   "description": "Api SIMRS Kanza",
   "main": "index.js",
   "scripts": {
@@ -17,6 +17,7 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",
+    "lz-string": "^1.5.0",
     "mariadb": "^3.0.2",
     "morgan": "^1.10.0",
     "redis": "^4.6.13",

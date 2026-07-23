@@ -50,6 +50,7 @@ app.use('/api/views', views);
 app.use('/api/registrasi', require('./routes/registrasi'));
 app.use('/api/users', require('./routes/user'));
 app.use('/api/inacbg', require('./routes/inacbg'));
+app.use('/api/bpjs', require('./routes/bpjs'));
 
 app.use("/api/pages/upload/", express.static(path.join(__dirname + '/public/uploads/')));
 
