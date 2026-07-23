@@ -1,4 +1,4 @@
-const Bpjs = require('../helpers/Bpjs'); // Sesuaikan path
+const Bpjs = require('../helpers/bpjs'); // Sesuaikan path
 
 // Helper untuk generate array tanggal (Y-m-d) dari 'from' ke 'until'
 const generateDateList = (from, until) => {
