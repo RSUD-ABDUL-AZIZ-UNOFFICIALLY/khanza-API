@@ -29,10 +29,10 @@ routes.post('/antrean/getlisttask', bpjs.getlisttask);
 routes.post('/antrean/batal', bpjs.antrean_batal);
 routes.post('/antrean/batal', bpjs.antrean_batal);
 routes.post('/antrean/updatewaktu', bpjs.updatewaktu);
-routes.post('/antrean/pendaftaranby', bpjs.getAntreanby);
-routes.post('/antrean/jadwaldokter', bpjs.getJadwalDokter);
-routes.post('/antrean/refdokter', bpjs.getRefDokter);
-routes.post('/antrean/refpoli', bpjs.getRefPoli);
+routes.get('/antrean/pendaftaranby', bpjs.getAntreanby);
+routes.get('/antrean/jadwaldokter', bpjs.getJadwalDokter);
+routes.get('/antrean/refdokter', bpjs.getRefDokter);
+routes.get('/antrean/refpoli', bpjs.getRefPoli);
 routes.post('/icare/validate', bpjs.icare);
 
 module.exports = routes;

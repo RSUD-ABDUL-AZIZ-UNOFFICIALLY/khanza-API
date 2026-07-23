@@ -82,7 +82,6 @@ const BpjsController = {
         try {
             const bpjs = new Bpjs();
             const data = bpjs.getSignature();
-
             // Mengambil multiple parameter, bisa dari query string (GET) atau body (POST)
             const tanggal = req.query.tanggal || req.body.tanggal;
             const pelayanan = req.query.pelayanan || req.body.pelayanan;
@@ -193,10 +192,14 @@ const BpjsController = {
     },
 
     async getPesertaByNik(req, res) {
-        const bpjs = new Bpjs();
-        const data = bpjs.getSignature();
         const nik = req.query.nik || req.body.nik;
         const tglSEP = req.query.tglSEP || req.body.tglSEP;
+        let cache = await req.cache.json.get(`bpjs:getPesertaByNik:${nik}:${tglSEP}`, '$');
+        if (cache !== null) {
+            return res.json(cache);
+        }
+        const bpjs = new Bpjs();
+        const data = bpjs.getSignature();
 
         const url = `${process.env['BPJS.vclaimURL']}/Peserta/nik/${nik}/tglSEP/${tglSEP}`;
         const response = await fetch(url, { headers: getHeaders(data) });
@@ -207,6 +210,8 @@ const BpjsController = {
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
         bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
+        req.cache.json.set(`bpjs:getPesertaByNik:${nik}:${tglSEP}`, '$', bpjsRes);
+        req.cache.expire(`bpjs:getPesertaByNik:${nik}:${tglSEP}`, 60 * 60);
         return res.json(bpjsRes);
     },
 
@@ -501,11 +506,14 @@ const BpjsController = {
     },
 
     async getJadwalDokter(req, res) {
-        const bpjs = new Bpjs();
-        const data = bpjs.getSignature();
         const tanggal = req.query.tanggal || req.body.tanggal;
         const kd_poli = req.query.kd_poli_BPJS || req.body.kd_poli_BPJS;
-
+        let cache = await req.cache.json.get(`bpjs:getJadwalDokter:${tanggal}:${kd_poli}`, '$');
+        if (cache !== null) {
+            return res.json(cache);
+        }
+        const bpjs = new Bpjs();
+        const data = bpjs.getSignature();
         const url = `${process.env['BPJS.baseURL']}/jadwaldokter/kodepoli/${kd_poli}/tanggal/${tanggal}`;
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
@@ -515,10 +523,17 @@ const BpjsController = {
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
         bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
+        req.cache.json.set(`bpjs:getJadwalDokter:${tanggal}:${kd_poli}`, '$', bpjsRes);
+        req.cache.expire(`bpjs:getJadwalDokter:${tanggal}:${kd_poli}`, 60 * 60 * 48);
+
         return res.json(bpjsRes);
     },
 
     async getRefDokter(req, res) {
+        let cache = await req.cache.json.get('bpjs:getRefDokter', '$');
+        if (cache !== null) {
+            return res.json(cache);
+        }
         const bpjs = new Bpjs();
         const data = bpjs.getSignature();
 
@@ -530,10 +545,17 @@ const BpjsController = {
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
         bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
+
+        req.cache.json.set('bpjs:getRefDokter', '$', bpjsRes);
+        req.cache.expire('bpjs:getRefDokter', 60 * 60);
         return res.json(bpjsRes);
     },
 
     async getRefPoli(req, res) {
+        let cache = await req.cache.json.get('bpjs:getRefPoli', '$');
+        if (cache !== null) {
+            return res.json(cache);
+        }
         const bpjs = new Bpjs();
         const data = bpjs.getSignature();
 
@@ -544,6 +566,9 @@ const BpjsController = {
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
         bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
+
+        req.cache.json.set('bpjs:getRefPoli', '$', bpjsRes);
+        req.cache.expire('bpjs:getRefPoli', 60 * 60);
         return res.json(bpjsRes);
     },
 
