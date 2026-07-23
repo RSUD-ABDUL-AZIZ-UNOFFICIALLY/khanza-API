@@ -1,3 +1,4 @@
+require('dotenv').config();
 const Bpjs = require('../helpers/bpjs'); // Sesuaikan path
 
 // Helper untuk generate array tanggal (Y-m-d) dari 'from' ke 'until'
@@ -16,10 +17,10 @@ const generateDateList = (from, until) => {
 
 // Helper untuk generate standar headers BPJS
 const getHeaders = (data) => ({
-    'X-cons-id': data.X_cons_id,
+    'X-cons-id': process.env['BPJS.X_cons_id'],
     'X-timestamp': data.timestamp,
     'X-signature': data.signature,
-    'user_key': data.user_key,
+    'user_key': process.env['BPJS.user_key'],
     'Content-Type': 'application/json'
 });
 
@@ -42,7 +43,7 @@ const BpjsController = {
 
             const headers = getHeaders(data);
 
-            const url = `${data.vclaimURL}/SEP/${noSEP}`;
+            const url = `${process.env['BPJS.vclaimURL']}/SEP/${noSEP}`;
 
             // Mengirim request (setara dengan Guzzle client->sendAsync)
             const response = await fetch(url, {
@@ -95,7 +96,7 @@ const BpjsController = {
             }
 
             // Menyusun URL menggunakan Template Literals (backtick)
-            const url = `${data.vclaimURL}/Monitoring/Klaim/Tanggal/${tanggal}/JnsPelayanan/${pelayanan}/Status/${status}`;
+            const url = `${process.env['BPJS.vclaimURL']}/Monitoring/Klaim/Tanggal/${tanggal}/JnsPelayanan/${pelayanan}/Status/${status}`;
             const headers = getHeaders(data);
             // Eksekusi request dengan Fetch
             const response = await fetch(url, {
@@ -139,9 +140,11 @@ const BpjsController = {
         const dateList = generateDateList(from, until);
         let resultData = [];
         const headers = getHeaders(data);
+        console.log(data);
+        console.log(headers);
 
         for (const tanggal of dateList) {
-            const url = `${data.vclaimURL}/Monitoring/Klaim/Tanggal/${tanggal}/JnsPelayanan/${pelayanan}/Status/${status}`;
+            const url = `${process.env['BPJS.vclaimURL']}/Monitoring/Klaim/Tanggal/${tanggal}/JnsPelayanan/${pelayanan}/Status/${status}`;
             const response = await fetch(url, { headers });
             const bpjsRes = await response.json();
 
@@ -171,7 +174,7 @@ const BpjsController = {
         const headers = getHeaders(data);
 
         for (const tanggal of dateList) {
-            const url = `${data.vclaimURL}/Monitoring/Kunjungan/Tanggal/${tanggal}/JnsPelayanan/${pelayanan}`;
+            const url = `${process.env['BPJS.vclaimURL']}/Monitoring/Kunjungan/Tanggal/${tanggal}/JnsPelayanan/${pelayanan}`;
             const response = await fetch(url, { headers });
             const bpjsRes = await response.json();
 
@@ -195,7 +198,7 @@ const BpjsController = {
         const nik = req.query.nik || req.body.nik;
         const tglSEP = req.query.tglSEP || req.body.tglSEP;
 
-        const url = `${data.vclaimURL}/Peserta/nik/${nik}/tglSEP/${tglSEP}`;
+        const url = `${process.env['BPJS.vclaimURL']}/Peserta/nik/${nik}/tglSEP/${tglSEP}`;
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
@@ -213,7 +216,7 @@ const BpjsController = {
         const noKartu = req.query.nik || req.body.nik; // Di PHP anda pakai var 'nik' juga
         const tglSEP = req.query.tglSEP || req.body.tglSEP;
 
-        const url = `${data.vclaimURL}/Peserta/nokartu/${noKartu}/tglSEP/${tglSEP}`;
+        const url = `${process.env['BPJS.vclaimURL']}/Peserta/nokartu/${noKartu}/tglSEP/${tglSEP}`;
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
@@ -230,7 +233,7 @@ const BpjsController = {
         const data = bpjs.getSignature();
         const noKartu = req.query.noKartu || req.body.noKartu;
 
-        const url = `${data.vclaimURL}/Rujukan/List/Peserta/${noKartu}`;
+        const url = `${process.env['BPJS.vclaimURL']}/Rujukan/List/Peserta/${noKartu}`;
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
@@ -248,7 +251,7 @@ const BpjsController = {
         const jenisRujukan = req.query.jenisRujukan || req.body.jenisRujukan;
         const noRujukan = req.query.noRujukan || req.body.noRujukan;
 
-        const url = `${data.vclaimURL}/Rujukan/JumlahSEP/${jenisRujukan}/${noRujukan}`;
+        const url = `${process.env['BPJS.vclaimURL']}/Rujukan/JumlahSEP/${jenisRujukan}/${noRujukan}`;
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
@@ -268,7 +271,7 @@ const BpjsController = {
         const nokartu = req.query.Nokartu || req.body.Nokartu;
         const filter = req.query.filter || req.body.filter;
 
-        const url = `${data.vclaimURL}/RencanaKontrol/ListRencanaKontrol/Bulan/${bulan}/Tahun/${tahun}/Nokartu/${nokartu}/filter/${filter}`;
+        const url = `${process.env['BPJS.vclaimURL']}/RencanaKontrol/ListRencanaKontrol/Bulan/${bulan}/Tahun/${tahun}/Nokartu/${nokartu}/filter/${filter}`;
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
@@ -286,7 +289,7 @@ const BpjsController = {
         const nokartu = req.query.Nokartu || req.body.Nokartu;
         const tglpelayanan = req.query.Tglpelayanan || req.body.Tglpelayanan;
 
-        const url = `${data.vclaimURL}/SEP/FingerPrint/Peserta/${nokartu}/TglPelayanan/${tglpelayanan}`;
+        const url = `${process.env['BPJS.vclaimURL']}/SEP/FingerPrint/Peserta/${nokartu}/TglPelayanan/${tglpelayanan}`;
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
@@ -303,7 +306,7 @@ const BpjsController = {
         const data = bpjs.getSignature();
         const tglpelayanan = req.query.Tglpelayanan || req.body.Tglpelayanan;
 
-        const url = `${data.vclaimURL}/SEP/FingerPrint/List/Peserta/TglPelayanan/${tglpelayanan}`;
+        const url = `${process.env['BPJS.vclaimURL']}/SEP/FingerPrint/List/Peserta/TglPelayanan/${tglpelayanan}`;
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
@@ -322,7 +325,7 @@ const BpjsController = {
         const start = req.query.start || req.body.start;
         const limit = req.query.limit || req.body.limit;
 
-        const url = `${data.URL}aplicaresws/rest/bed/read/${data.ppk}/${start}/${limit}`;
+        const url = `${process.env['BPJS.URL']}aplicaresws/rest/bed/read/${data.ppk}/${start}/${limit}`;
         const response = await fetch(url, { headers: getHeaders(data) });
         return res.json(await response.json());
     },
@@ -331,7 +334,7 @@ const BpjsController = {
         const bpjs = new Bpjs();
         const data = bpjs.getSignature();
 
-        const url = `${data.URL}aplicaresws/rest/bed/update/${data.ppk}`;
+        const url = `${process.env['BPJS.URL']}aplicaresws/rest/bed/update/${data.ppk}`;
         const response = await fetch(url, {
             method: 'POST',
             headers: getHeaders(data),
@@ -344,7 +347,7 @@ const BpjsController = {
         const bpjs = new Bpjs();
         const data = bpjs.getSignature();
 
-        const url = `${data.URL}aplicaresws/rest/bed/delete/${data.ppk}`;
+        const url = `${process.env['BPJS.URL']}aplicaresws/rest/bed/delete/${data.ppk}`;
         const response = await fetch(url, {
             method: 'POST',
             headers: getHeaders(data),
@@ -357,7 +360,7 @@ const BpjsController = {
         const bpjs = new Bpjs();
         const data = bpjs.getSignature();
 
-        const url = `${data.URL}aplicaresws/rest/bed/create/${data.ppk}`;
+        const url = `${process.env['BPJS.URL']}aplicaresws/rest/bed/create/${data.ppk}`;
         const response = await fetch(url, {
             method: 'POST',
             headers: getHeaders(data),
@@ -370,7 +373,7 @@ const BpjsController = {
         const bpjs = new Bpjs();
         const data = bpjs.getSignature();
 
-        const url = `${data.URL}aplicaresws/rest/ref/kelas`;
+        const url = `${process.env['BPJS.URL']}aplicaresws/rest/ref/kelas`;
         // Secara best practice REST, GET tidak pakai body, tapi karena kode PHP Anda
         // mengirim json_encode($kelas) di GET request, ini opsional di Node.
         const response = await fetch(url, { headers: getHeaders(data) });
@@ -382,7 +385,7 @@ const BpjsController = {
         const bpjs = new Bpjs();
         const data = bpjs.getSignature();
 
-        const url = `${data.baseURL}/antrean/add`;
+        const url = `${process.env['BPJS.baseURL']}/antrean/add`;
         const response = await fetch(url, {
             method: 'POST',
             headers: getHeaders(data),
@@ -395,7 +398,7 @@ const BpjsController = {
         const bpjs = new Bpjs();
         const data = bpjs.getSignature();
 
-        const url = `${data.baseURL}/antrean/farmasi/add`;
+        const url = `${process.env['BPJS.baseURL']}/antrean/farmasi/add`;
         const response = await fetch(url, {
             method: 'POST',
             headers: getHeaders(data),
@@ -409,7 +412,7 @@ const BpjsController = {
         const data = bpjs.getSignature();
         const tanggal = req.query.tanggal || req.body.tanggal;
 
-        const url = `${data.baseURL}/antrean/pendaftaran/tanggal/${tanggal}`;
+        const url = `${process.env['BPJS.baseURL']}/antrean/pendaftaran/tanggal/${tanggal}`;
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
@@ -426,7 +429,7 @@ const BpjsController = {
         const bpjs = new Bpjs();
         const data = bpjs.getSignature();
 
-        const url = `${data.baseURL}/antrean/getlisttask`;
+        const url = `${process.env['BPJS.baseURL']}/antrean/getlisttask`;
         const response = await fetch(url, {
             method: 'POST',
             headers: getHeaders(data),
@@ -446,7 +449,7 @@ const BpjsController = {
         const bpjs = new Bpjs();
         const data = bpjs.getSignature();
 
-        const url = `${data.baseURL}/antrean/batal`;
+        const url = `${process.env['BPJS.baseURL']}/antrean/batal`;
         const response = await fetch(url, {
             method: 'POST',
             headers: getHeaders(data),
@@ -459,7 +462,7 @@ const BpjsController = {
         const bpjs = new Bpjs();
         const data = bpjs.getSignature();
 
-        const url = `${data.baseURL}/antrean/updatewaktu`;
+        const url = `${process.env['BPJS.baseURL']}/antrean/updatewaktu`;
         const response = await fetch(url, {
             method: 'POST',
             headers: getHeaders(data),
@@ -479,7 +482,7 @@ const BpjsController = {
         const headers = getHeaders(data);
 
         for (const tanggal of dateList) {
-            const url = `${data.baseURL}/antrean/pendaftaran/tanggal/${tanggal}`;
+            const url = `${process.env['BPJS.baseURL']}/antrean/pendaftaran/tanggal/${tanggal}`;
             const response = await fetch(url, { headers });
             const bpjsRes = await response.json();
 
@@ -503,7 +506,7 @@ const BpjsController = {
         const tanggal = req.query.tanggal || req.body.tanggal;
         const kd_poli = req.query.kd_poli_BPJS || req.body.kd_poli_BPJS;
 
-        const url = `${data.baseURL}/jadwaldokter/kodepoli/${kd_poli}/tanggal/${tanggal}`;
+        const url = `${process.env['BPJS.baseURL']}/jadwaldokter/kodepoli/${kd_poli}/tanggal/${tanggal}`;
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
@@ -519,7 +522,7 @@ const BpjsController = {
         const bpjs = new Bpjs();
         const data = bpjs.getSignature();
 
-        const url = `${data.baseURL}/ref/dokter`;
+        const url = `${process.env['BPJS.baseURL']}/ref/dokter`;
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
@@ -534,7 +537,7 @@ const BpjsController = {
         const bpjs = new Bpjs();
         const data = bpjs.getSignature();
 
-        const url = `${data.baseURL}/ref/poli`;
+        const url = `${process.env['BPJS.baseURL']}/ref/poli`;
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
@@ -551,7 +554,7 @@ const BpjsController = {
         const tahun = req.query.tahun || req.body.tahun;
         const filter = req.query.filter || req.body.filter;
 
-        const url = `${data.vclaimURL}/Sep/updtglplg/list/bulan/${bulan}/tahun/${tahun}/${filter}`;
+        const url = `${process.env['BPJS.vclaimURL']}/Sep/updtglplg/list/bulan/${bulan}/tahun/${tahun}/${filter}`;
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
@@ -566,7 +569,7 @@ const BpjsController = {
         const bpjs = new Bpjs();
         const data = bpjs.getSignature();
 
-        const url = `${data.URL}wsihs/api/rs/validate`;
+        const url = `${process.env['BPJS.URL']}wsihs/api/rs/validate`;
         const response = await fetch(url, {
             method: 'POST',
             headers: getHeaders(data),

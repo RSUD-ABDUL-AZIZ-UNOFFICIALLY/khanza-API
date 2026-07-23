@@ -5,13 +5,10 @@ const LZString = require('lz-string');
 class Bpjs {
     getSignature() {
         // Node.js membaca variable di .env dengan bracket notation jika menggunakan titik
-        const secretKey = process.env['BPJS.secretKey'];
-        const consId = process.env['BPJS.X_cons_id'];
-        const userKey = process.env['BPJS.user_key'];
-        const baseURL = process.env['BPJS.baseURL'];
-        const vclaimURL = process.env['BPJS.vclaimURL'];
-        const url = process.env['BPJS.URL'];
-        const ppk = process.env['BPJS.kodeppk'];
+        const secretKey = process.env['BPJS.secretKey']
+        console.log(secretKey);
+        const consId = process.env['BPJS.X_cons_id']
+        const ppk = process.env['BPJS.kodeppk']
 
         // Setara dengan time() - strtotime('1970-01-01 00:00:00') di PHP (Unix timestamp dalam detik)
         const tStamp = Math.floor(Date.now() / 1000).toString();
@@ -26,12 +23,7 @@ class Bpjs {
             timestamp: tStamp,
             signature: signature,
             secretKey: secretKey,
-            X_cons_id: consId,
-            user_key: userKey,
-            baseURL: baseURL,
-            vclaimURL: vclaimURL,
-            URL: url,
-            ppk: ppk
+            X_cons_id: consId
         };
     }
 
