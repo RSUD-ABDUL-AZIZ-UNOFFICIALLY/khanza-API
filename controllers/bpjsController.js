@@ -55,7 +55,7 @@ const BpjsController = {
             const bpjsRes = await response.json();
 
             // Jika balikan BPJS error/bukan 200, langsung kembalikan responsenya
-            if (bpjsRes.metaData.code !== "200") {
+            if (bpjsRes.metaData.code !== 200) {
                 return res.json(bpjsRes);
             }
 
@@ -106,7 +106,7 @@ const BpjsController = {
             const bpjsRes = await response.json();
 
             // Jika response gagal / tidak 200, kembalikan json aslinya
-            if (bpjsRes.metaData.code !== "200") {
+            if (bpjsRes.metaData.code !== 200) {
                 return res.json(bpjsRes);
             }
 
@@ -147,7 +147,7 @@ const BpjsController = {
             const response = await fetch(url, { headers });
             const bpjsRes = await response.json();
 
-            if (bpjsRes.metaData && bpjsRes.metaData.code === "200") {
+            if (bpjsRes.metaData && bpjsRes.metaData.code === 200) {
                 const key = data.X_cons_id + data.secretKey + data.timestamp;
                 let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
                 hasil = JSON.parse(bpjs.decompress(hasil));
@@ -177,7 +177,7 @@ const BpjsController = {
             const response = await fetch(url, { headers });
             const bpjsRes = await response.json();
 
-            if (bpjsRes.metaData && bpjsRes.metaData.code === "200") {
+            if (bpjsRes.metaData && bpjsRes.metaData.code === 200) {
                 const key = data.X_cons_id + data.secretKey + data.timestamp;
                 let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
                 hasil = JSON.parse(bpjs.decompress(hasil));
@@ -205,7 +205,7 @@ const BpjsController = {
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
-        if (bpjsRes.metaData.code !== "200") return res.json(bpjsRes);
+        if (bpjsRes.metaData.code !== 200) return res.json(bpjsRes);
 
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
@@ -225,7 +225,7 @@ const BpjsController = {
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
-        if (bpjsRes.metaData.code !== "200") return res.json(bpjsRes);
+        if (bpjsRes.metaData.code !== 200) return res.json(bpjsRes);
 
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
@@ -242,7 +242,7 @@ const BpjsController = {
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
-        if (bpjsRes.metaData.code !== "200") return res.json(bpjsRes);
+        if (bpjsRes.metaData.code !== 200) return res.json(bpjsRes);
 
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
@@ -260,7 +260,7 @@ const BpjsController = {
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
-        if (bpjsRes.metaData.code !== "200") return res.json(bpjsRes);
+        if (bpjsRes.metaData.code !== 200) return res.json(bpjsRes);
 
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
@@ -280,7 +280,7 @@ const BpjsController = {
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
-        if (bpjsRes.metaData.code !== "200") return res.json(bpjsRes);
+        if (bpjsRes.metaData.code !== 200) return res.json(bpjsRes);
 
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
@@ -298,7 +298,7 @@ const BpjsController = {
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
-        if (bpjsRes.metaData.code !== "200") return res.json(bpjsRes);
+        if (bpjsRes.metaData.code !== 200) return res.json(bpjsRes);
 
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
@@ -315,7 +315,7 @@ const BpjsController = {
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
-        if (bpjsRes.metaData.code !== "200") return res.json(bpjsRes);
+        if (bpjsRes.metaData.code !== 200) return res.json(bpjsRes);
 
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
@@ -422,7 +422,7 @@ const BpjsController = {
         const bpjsRes = await response.json();
 
         // Antrean pakai metadata, bukan metaData
-        if (bpjsRes.metadata.code !== "200") return res.json(bpjsRes);
+        if (bpjsRes.metadata.code !== 200) return res.json(bpjsRes);
 
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
@@ -441,13 +441,14 @@ const BpjsController = {
             body: JSON.stringify(req.body)
         });
         const bpjsRes = await response.json();
-
-        if (bpjsRes.metadata.code !== "200") return res.json(bpjsRes);
-
+        console.log(bpjsRes.metadata);
+        if (bpjsRes.metadata.code !== 200) return res.json("bpjsRes");
+        
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
+        console.log("hasil");
         bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
-        return res.json(bpjsRes);
+        return res.json(bpjsRes.response);
     },
 
     async antrean_batal(req, res) {
@@ -491,7 +492,7 @@ const BpjsController = {
             const response = await fetch(url, { headers });
             const bpjsRes = await response.json();
 
-            if (bpjsRes.metadata && bpjsRes.metadata.code === "200") {
+            if (bpjsRes.metadata && bpjsRes.metadata.code === 200) {
                 const key = data.X_cons_id + data.secretKey + data.timestamp;
                 let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
                 hasil = JSON.parse(bpjs.decompress(hasil));
@@ -519,7 +520,7 @@ const BpjsController = {
             const response = await fetch(url, { headers: getHeaders(data) });
             const bpjsRes = await response.json();
 
-            if (bpjsRes.metadata.code !== "200") return res.json(bpjsRes);
+            if (bpjsRes.metadata.code !== 200) return res.json(bpjsRes);
 
             const key = data.X_cons_id + data.secretKey + data.timestamp;
             let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
@@ -608,7 +609,7 @@ const BpjsController = {
         });
         const bpjsRes = await response.json();
 
-        if (bpjsRes.metaData.code !== "200") return res.json(bpjsRes);
+        if (bpjsRes.metaData.code !== 200) return res.json(bpjsRes);
 
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);

@@ -6,7 +6,6 @@ class Bpjs {
     getSignature() {
         // Node.js membaca variable di .env dengan bracket notation jika menggunakan titik
         const secretKey = process.env['BPJS.secretKey']
-        console.log(secretKey);
         const consId = process.env['BPJS.X_cons_id']
         const ppk = process.env['BPJS.kodeppk']
 
