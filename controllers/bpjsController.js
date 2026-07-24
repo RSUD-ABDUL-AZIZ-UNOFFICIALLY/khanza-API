@@ -441,12 +441,10 @@ const BpjsController = {
             body: JSON.stringify(req.body)
         });
         const bpjsRes = await response.json();
-        console.log(bpjsRes.metadata);
         if (bpjsRes.metadata.code !== 200) return res.json("bpjsRes");
         
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
-        console.log("hasil");
         bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
         return res.json(bpjsRes.response);
     },
