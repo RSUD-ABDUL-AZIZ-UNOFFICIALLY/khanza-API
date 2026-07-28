@@ -1,6 +1,6 @@
 'use strict';
-const { reg_periksa, pasien, dokter, poliklinik, jadwal, pegawai, pemeriksaan_ralan, master_berkas_digital, berkas_digital_perawatan, bridging_sep } = require('../models');
-const { Op } = require("sequelize");
+const { reg_periksa, pasien, dokter, poliklinik, jadwal, pegawai, pemeriksaan_ralan, master_berkas_digital, berkas_digital_perawatan, bridging_sep, rujukan_internal_poli } = require('../models');
+const { Op, where } = require("sequelize");
 module.exports = {
     getIGD: async (req, res) => {
         try {
@@ -294,6 +294,13 @@ module.exports = {
         try {
             let query = req.query;
             console.log(query);
+            if (!query.tgl_antrean || !query.kd_poli) {
+                return res.status(400).json({
+                    status: false,
+                    message: 'Bad Request',
+                    data: 'Parameter tgl_antrean dan kd_poli harus diisi'
+                });
+            }
             let dataAntiran = await reg_periksa.findAll({
                 attributes: ['no_reg', 'no_rawat', 'tgl_registrasi', 'kd_poli', 'status_lanjut','stts'],
                 where: {
@@ -338,6 +345,130 @@ module.exports = {
             });
 
         }
+    },
+    getAntiranRujukanPoli: async (req, res) => {
+        let query = req.query;
+        console.log(query);
+        if (!query.tgl_antrean || !query.kd_poli) {
+            return res.status(400).json({
+                status: false,
+                message: 'Bad Request',
+                data: 'Parameter tgl_antrean dan kd_poli harus diisi'
+            });
+        }
+        try {
+
+            let data_rujukan_internal_poli = await rujukan_internal_poli.findAll({
+                where: {
+                    kd_poli: query.kd_poli,
+                },
+                raw: true,
+                nest: true,
+                include: [
+                    {
+                        model: reg_periksa,
+                        as: 'reg_periksa',
+                        where: {
+                            tgl_registrasi: query.tgl_antrean,
+                            status_lanjut: 'Ralan'
+                        },
+                        attributes: ['no_reg', 'no_rawat', 'tgl_registrasi', 'kd_poli', 'status_lanjut', 'stts'],
+                        include: [
+                            {
+                                model: pasien,
+                                as: 'pasien',
+                                attributes: ['nm_pasien', 'no_rkm_medis', 'no_ktp', 'no_peserta']
+                            }
+                        ]
+                    },
+                    {
+                        model: poliklinik,
+                        as: 'poliklinik',
+                        attributes: ['nm_poli']
+                    },
+                    {
+                        model: dokter,
+                        as: 'dokter',
+                        attributes: ['nm_dokter']
+                    }
+                ]
+            })
+
+            //  {
+            // "no_reg": "001",
+            // "no_rawat": "2026/07/04/000029",
+            // "tgl_registrasi": "2026-07-04",
+            // "kd_poli": "INT",
+            // "status_lanjut": "Ralan",
+            // "stts": "Batal",
+            // "pasien": {
+            //     "nm_pasien": "RINDAR PRIHARTONO",
+            //     "no_rkm_medis": "022860",
+            //     "no_ktp": "6172020701680001",
+            //     "no_peserta": "0000051156257"
+            // },
+            // "poliklinik": {
+            //     "nm_poli": "Poliklinik Penyakit Dalam"
+            // },
+            // "dokter": {
+            //     "nm_dokter": "dr. Rahmad Budianto, Sp.PD"
+            // }
+            // },
+
+
+            //      {
+            //     "no_rawat": "2026/07/04/000078",
+            //     "kd_dokter": "D22",
+            //     "kd_poli": "INT",
+            //     "reg_periksa": {
+            //         "no_reg": "003",
+            //         "no_rawat": "2026/07/04/000078",
+            //         "tgl_registrasi": "2026-07-04",
+            //         "kd_poli": "U0004",
+            //         "status_lanjut": "Ralan",
+            //         "stts": "Sudah",
+            //         "pasien": {
+            //             "nm_pasien": "ANDI ANUM",
+            //             "no_rkm_medis": "553973",
+            //             "no_ktp": "6172050606740004",
+            //             "no_peserta": "0001064588376"
+            //         }
+            //     },
+            //     "poliklinik": {
+            //         "nm_poli": "Poliklinik Penyakit Dalam"
+            //     },
+            //     "dokter": {
+            //         "nm_dokter": "dr. HARTONO KURNIAWAN, Sp.PD"
+            //     }
+            // },
+            let dataAntrian = [];
+            for (let x of data_rujukan_internal_poli) {
+                // Gunakan {...} untuk cloning objek agar x.reg_periksa tidak termutasi
+                let data = { ...x.reg_periksa };
+                data.poliklinik = x.poliklinik;
+                data.dokter = x.dokter;
+                dataAntrian.push(data); // Typo 'dataAntiran' diperbaiki menjadi 'dataAntrian'
+            }
+            for (let x of dataAntrian) {
+                x.stts = 'Rujukan Internal Poli';
+            }
+
+            return res.status(200).json({
+                status: true,
+                message: 'Data antrean',
+                record: data_rujukan_internal_poli.length,
+                data: dataAntrian
+            })
+        } catch (err) {
+            console.log(err);
+            return res.status(400).json({
+                status: false,
+                message: 'Bad Request',
+                data: err.message
+            });
+        }
+
+
     },
     getPemeriksaan: async (req, res) => {
         try {

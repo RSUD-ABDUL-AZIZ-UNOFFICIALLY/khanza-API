@@ -53,9 +53,10 @@ const BpjsController = {
 
             // Parse response body sebagai JSON
             const bpjsRes = await response.json();
+            console.log(bpjsRes);
 
             // Jika balikan BPJS error/bukan 200, langsung kembalikan responsenya
-            if (bpjsRes.metaData.code !== 200) {
+            if (bpjsRes.metaData.code !== "200") {
                 return res.json(bpjsRes);
             }
 
@@ -106,7 +107,7 @@ const BpjsController = {
             const bpjsRes = await response.json();
 
             // Jika response gagal / tidak 200, kembalikan json aslinya
-            if (bpjsRes.metaData.code !== 200) {
+            if (bpjsRes.metaData.code !== "200") {
                 return res.json(bpjsRes);
             }
 
@@ -177,7 +178,7 @@ const BpjsController = {
             const response = await fetch(url, { headers });
             const bpjsRes = await response.json();
 
-            if (bpjsRes.metaData && bpjsRes.metaData.code === 200) {
+            if (bpjsRes.metaData && bpjsRes.metaData.code === "200") {
                 const key = data.X_cons_id + data.secretKey + data.timestamp;
                 let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
                 hasil = JSON.parse(bpjs.decompress(hasil));
@@ -189,6 +190,24 @@ const BpjsController = {
             metaData: { code: "200", message: true },
             response: { record: resultData.length, data: resultData }
         });
+    },
+    async getHistoriPelayanan(req, res) {
+        const bpjs = new Bpjs();
+        const data = bpjs.getSignature();
+        const noKartu = req.params.nokapst;
+        const tglMulai = req.params.start;
+        const tglAkhir = req.params.end;
+        console.log(noKartu, tglMulai, tglAkhir);
+
+        const url = `${process.env['BPJS.vclaimURL']}/monitoring/HistoriPelayanan/NoKartu/${noKartu}/tglMulai/${tglMulai}/tglAkhir/${tglAkhir}`;
+        const response = await fetch(url, { headers: getHeaders(data) });
+        const bpjsRes = await response.json();
+        if (bpjsRes.metaData.code !== "200") return res.json(bpjsRes);
+
+        const key = data.X_cons_id + data.secretKey + data.timestamp;
+        let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
+        bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
+        return res.json(bpjsRes);
     },
 
     async getPesertaByNik(req, res) {
@@ -298,7 +317,7 @@ const BpjsController = {
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
-        if (bpjsRes.metaData.code !== 200) return res.json(bpjsRes);
+        if (bpjsRes.metaData.code !== "200") return res.json(bpjsRes);
 
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
@@ -315,7 +334,7 @@ const BpjsController = {
         const response = await fetch(url, { headers: getHeaders(data) });
         const bpjsRes = await response.json();
 
-        if (bpjsRes.metaData.code !== 200) return res.json(bpjsRes);
+        if (bpjsRes.metaData.code !== "200") return res.json(bpjsRes);
 
         const key = data.X_cons_id + data.secretKey + data.timestamp;
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
@@ -428,6 +447,22 @@ const BpjsController = {
         let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
         bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
         return res.json(bpjsRes);
+    },
+
+    async getAntreanAktif(req, res) {
+        const bpjs = new Bpjs();
+        const data = bpjs.getSignature();
+
+        const url = `${process.env['BPJS.baseURL']}/antrean/pendaftaran/aktif`;
+        const response = await fetch(url, { headers: getHeaders(data) });
+        const bpjsRes = await response.json();
+        if (bpjsRes.metadata.code !== 200) return res.json(bpjsRes);
+
+        const key = data.X_cons_id + data.secretKey + data.timestamp;
+        let hasil = bpjs.stringDecrypt(key, bpjsRes.response);
+        bpjsRes.response = JSON.parse(bpjs.decompress(hasil));
+        return res.json(bpjsRes);
+        return res.json(await response.json());
     },
 
     async getlisttask(req, res) {
