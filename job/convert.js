@@ -40,7 +40,7 @@ const convertTxtToJson = (inputFile, outputFile) => {
 };
 
 // Jalankan fungsi
-const inputFile = path.join(__dirname, '../cache/6172011_20260412_MIX.TXT'); // Ganti dengan nama file .txt Anda
+const inputFile = path.join(__dirname, '../cache/6172011_20260811_MIX.TXT'); // Ganti dengan nama file .txt Anda
 // const outputFile = path.join(__dirname, '../controllers/inacbg/ .json');
-const outputFile = path.join(__dirname, '../cache/ranap122025.json');
+const outputFile = path.join(__dirname, '../cache/ranap042026.json');
 convertTxtToJson(inputFile, outputFile);

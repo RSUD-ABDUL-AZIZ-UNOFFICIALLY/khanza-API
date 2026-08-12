@@ -13,7 +13,13 @@ module.exports = {
         "password": DB_PASSWORD,
         "database": DB_NAME,
         "host": DB_HOST,
-        "dialect": DB_DIALECT
+        "dialect": DB_DIALECT,
+        "pool": {
+            "maxConnections": 10,
+            "maxIdleTime": 30000,
+            "minIdleTime": 10000,
+            "acquireTimeout": 30000
+        },
     },
     "test": {
         "username": DB_USERNAME,

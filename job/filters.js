@@ -21,4 +21,18 @@ async function find(params) {
     console.log(countBySetujui);
     
 }
-find();
+// find();
+
+async function selisi() {
+    let dataINACBG = fs.readFileSync('cache/' + 'ranap022026' + '.json');
+    dataINACBG = JSON.parse(dataINACBG);
+    let dataBPJS = fs.readFileSync('cache/' + 'RawRanapJS' + '.json')
+    dataBPJS = JSON.parse(dataBPJS);
+
+    // Menghapus data A yang SEP-nya ada di data B
+    const dataAFiltered = dataINACBG.filter(itemA =>
+        !dataBPJS.some(itemB => itemB.noSEP === itemA.SEP)
+    );
+    console.log(dataAFiltered);
+}
+selisi();

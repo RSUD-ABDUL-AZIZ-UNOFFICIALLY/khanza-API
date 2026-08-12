@@ -2244,12 +2244,12 @@ module.exports = {
                     });
 
                 }
-                let getData = await req.cache.json.get(`data:monitoring:Pendingklaim:${param.from}:${param.until}:${param.pelayanan}:getDataBPJS`, '$');
+                let getData = await req.cache.json.get(`data:monitoring:Pendingklaim:${param.from}:${param.until}:${param.pelayanan}:${param.status}`, '$');
                 if (getData == null) {
                     getData = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan + '&status=' + param.status);
                     getData = getData.data.response.data;
-                    req.cache.json.set(`data:monitoring:Pendingklaim:${param.from}:${param.until}:${param.pelayanan}:getDataBPJS`, '$', getData);
-                    req.cache.expire(`data:monitoring:Pendingklaim:${param.from}:${param.until}:${param.pelayanan}:getDataBPJS`, 60 * 60);
+                    req.cache.json.set(`data:monitoring:Pendingklaim:${param.from}:${param.until}:${param.pelayanan}:${param.status}`, '$', getData);
+                    req.cache.expire(`data:monitoring:Pendingklaim:${param.from}:${param.until}:${param.pelayanan}:${param.status}`, 60 * 60);
                 }
                 let inacbg = fs.readFileSync('cache/' + param.dataINACBG, 'utf-8');
                 inacbg = JSON.parse(inacbg);
@@ -2449,7 +2449,9 @@ module.exports = {
                 // console.log(raberDPJP);
                 for (let e of getData) {
                     // IF Pending Uncommnet
-                    // e.biaya.bySetujui = parseInt(e.biaya.byTarifGruper); 
+                    if (e.biaya.bySetujui == '0') {
+                        e.biaya.bySetujui = parseInt(e.biaya.byTarifGruper);
+                    }
                     let raber = raberDPJP.filter(item => item.no_rawat === e.no_rawat);
                     e.jumlahRaber = raber.length;
 
