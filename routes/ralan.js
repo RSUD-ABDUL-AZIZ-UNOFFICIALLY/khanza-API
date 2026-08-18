@@ -20,6 +20,8 @@ routes.post('/pemeriksaan', middleware.check, ralan.postPemeriksaan);
 routes.put('/pemeriksaan', middleware.check, ralan.updatePemeriksaan);
 routes.get('/pemeriksaan/riwayat', middleware.check, ralan.getRiwayatPemeriksaan);
 routes.get('/pemeriksaan/berkas', middleware.check, ralan.getBerkasRiwayat);
+routes.get('/antrian/farmasi', middleware.check, ralan.getAntrianFarmasi);
+
 
 
 module.exports = routes;

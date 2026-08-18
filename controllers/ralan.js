@@ -1,5 +1,5 @@
 'use strict';
-const { reg_periksa, pasien, dokter, poliklinik, jadwal, pegawai, pemeriksaan_ralan, master_berkas_digital, berkas_digital_perawatan, bridging_sep, rujukan_internal_poli } = require('../models');
+const { reg_periksa, pasien, dokter, poliklinik, jadwal, pegawai, pemeriksaan_ralan, master_berkas_digital, berkas_digital_perawatan, bridging_sep, rujukan_internal_poli, resep_obat } = require('../models');
 const { Op, where } = require("sequelize");
 module.exports = {
     getIGD: async (req, res) => {
@@ -668,5 +668,88 @@ module.exports = {
 
         }
     },
+    getAntrianFarmasi: async (req, res) => {
+        try {
+            let query = req.query;
+            console.log(query);
+            if (!query.status || !query.tgl_peresepan) {
+                return res.status(400).json({
+                    status: false,
+                    message: 'Bad Request',
+                    data: 'Parameter status dan tgl_peresepan harus diisi'
+                });
+            }
+            if (query.status !== 'ralan' && query.status !== 'ranap') {
+                return res.status(400).json({
+                    status: false,
+                    message: 'Bad Request',
+                    data: 'Parameter status harus Ralan/Ranap'
+                });
+            }
+            let paramquery = {
+                status: query.status,
+                tgl_peresepan: query.tgl_peresepan,
+            };
+            if (query.penyerahan == '1') {
+                paramquery = {
+                    ...paramquery,
+                    tgl_penyerahan: {
+                        [Op.ne]: '0000-00-00'
+                    }
+                };
+            } else if (query.penyerahan == '0') {
+                paramquery = {
+                    ...paramquery,
+                    tgl_penyerahan: {
+                        [Op.eq]: '0000-00-00'
+                    }
+                };
+            }
+            let data_antrian_resep = await resep_obat.findAll({
+                where: paramquery,
+                attributes: ['no_resep', 'no_rawat', 'tgl_peresepan', 'jam_peresepan', 'tgl_penyerahan', 'jam_penyerahan'
+                ],
+                include: [
+                    {
+                        model: reg_periksa,
+                        as: 'reg_periksa',
+                        attributes: ['kd_poli', 'status_lanjut'],
+                        where: {
+                            kd_poli: {
+                                [Op.ne]: 'IGDK'
+                            }
+                        },
+                        include: [
+                            {
+                                model: pasien,
+                                as: 'pasien',
+                                attributes: ['nm_pasien', 'no_rkm_medis']
+                            },
+                            {
+                                model: poliklinik,
+                                as: 'poliklinik',
+                                attributes: ['nm_poli']
+                            },
+                        ]
+                    }
+                ],
+            })
+            console.log(data_antrian_resep);
+            return res.status(200).json({
+                status: true,
+                message: 'Data pemeriksaan',
+                record: data_antrian_resep.length,
+                data: data_antrian_resep
+            });
+        } catch (err) {
+            console.log(err);
+            return res.status(400).json({
+                status: false,
+                message: 'Bad Request',
+                data: err.message
+            });
+
+        }
+    }
 
 }
