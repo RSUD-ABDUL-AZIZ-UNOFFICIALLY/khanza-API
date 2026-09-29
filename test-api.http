@@ -4,7 +4,7 @@
 ### Usage: Click "Send Request" above each request block
 
 ### ===== ENVIRONMENT VARIABLES =====
-@baseUrl = http://localhost:3000
+@baseUrl = http://localhost:8000
 @token = YOUR_JWT_TOKEN_HERE
 @contentType = application/json
 
