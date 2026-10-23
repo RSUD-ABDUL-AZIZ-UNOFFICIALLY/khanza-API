@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:24-slim
 
 # Instal PM2 secara global
 RUN npm install pm2 -g
@@ -11,4 +11,5 @@ EXPOSE 3000
 
 # Jalankan npm install sebelum menyalakan pm2-runtime
 # Ini memastikan node_modules selalu siap di dalam container
-CMD ["sh", "-c", "npm install && pm2-runtime start ecosystem.config.js"]
+# CMD ["sh", "-c", "npm install && pm2-runtime start ecosystem.config.js"]
+CMD ["node", "index.js"]
