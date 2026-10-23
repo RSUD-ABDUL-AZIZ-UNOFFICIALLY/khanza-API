@@ -9,5 +9,6 @@ services:
     volumes:
       - .:/usr/src/app
       # - /opt/lampp/htdocs/webapps/berkasrawat/pages/upload/:/usr/src/app/public/uploads
+      - /usr/src/app/node_modules
     environment:
       - .env
