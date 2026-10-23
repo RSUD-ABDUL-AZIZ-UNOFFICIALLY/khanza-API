@@ -1,7 +1,8 @@
 FROM node:24-slim
 
 # Instal PM2 secara global
-RUN npm install pm2 -g
+# RUN npm install pm2 -g
+RUN npm install
 
 # Tentukan direktori kerja
 WORKDIR /usr/src/app
