@@ -20,6 +20,20 @@ function getCurrentTime() {
 
     return timeObject;
 }
+function formatDate(tanggalStr) {
+    // Memecah string tanggal berdasarkan karakter '/'
+    const bagian = tanggalStr.split('/');
+
+    if (bagian.length !== 3) return 'Format tanggal tidak valid';
+
+    const hari = bagian[0];
+    const bulan = bagian[1];
+    const tahun = bagian[2];
+
+    // Menggabungkan kembali dengan urutan tahun-bulan-hari
+    return `${tahun}-${bulan}-${hari}`;
+}
 module.exports = {
-    getCurrentTime
+    getCurrentTime,
+    formatDate
 }

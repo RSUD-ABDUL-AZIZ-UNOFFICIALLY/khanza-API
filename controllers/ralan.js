@@ -26,6 +26,7 @@ const {
     formasiBedah,
     formasiVenti
 } = require('../helpers/kalkulator');
+const { formatDate } = require('../helpers');
 module.exports = {
     getIGD: async (req, res) => {
         try {
@@ -2248,12 +2249,63 @@ module.exports = {
                 if (getData == null) {
                     getData = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan + '&status=' + param.status);
                     getData = getData.data.response.data;
+                    let getData2 = await axios.get(url_bpjs + '/api/bpjs/monitoring/klaim?from=' + param.from + '&until=' + param.until + '&pelayanan=' + param.pelayanan + '&status=1');
+                    getData2 = getData2.data.response.data;
+                    getData = getData.concat(getData2);
                     req.cache.json.set(`data:monitoring:Pendingklaim:${param.from}:${param.until}:${param.pelayanan}:${param.status}`, '$', getData);
                     req.cache.expire(`data:monitoring:Pendingklaim:${param.from}:${param.until}:${param.pelayanan}:${param.status}`, 60 * 60);
                 }
                 let inacbg = fs.readFileSync('cache/' + param.dataINACBG, 'utf-8');
                 inacbg = JSON.parse(inacbg);
                 let mapSEP = getData.map(item => item.noSEP);
+                const noSEPSet = new Set(getData.map(item => item.noSEP));
+
+                // 3️ Filter data2: hapus semua elemen yang SEP-nya ada di set
+                const filteredData2 = inacbg.filter(item => !noSEPSet.has(item.SEP));
+                for (let e of filteredData2) {
+                    let newData = {
+                        noFPK: "x",
+
+                        // Tanggal‑tanggal
+                        tglSep: formatDate(e.ADMISSION_DATE),   // 29/05/2026 → 2026‑05‑29
+                        tglPulang: formatDate(e.DISCHARGE_DATE), // 02/06/2026 → 2026‑06‑02
+
+                        // Nomor SEP
+                        noSEP: e.SEP,  // "1510R0010526V008062"
+
+                        // Kelas rawat (dari KELAS_RAWAT)
+                        kelasRawat: e.KELAS_RAWAT || "",
+
+                        // Poli tidak ada, kosongkan
+                        poli: "",
+
+                        // Status (bisa disesuaikan, contoh default)
+                        status: "4#BELUM",  // Anda bisa replace dengan e.DISCHARGE_STATUS
+
+                        // Biaya – map sesuai apa yang Anda butuhkan
+                        biaya: {
+                            byPengajuan: e.TARIF_INACBG,
+                            byTarifGruper: e.TARIF_INACBG,
+                            byTarifRS: e.TARIF_RS,
+                            byTopup: "0",
+                            bySetujui: e.TARIF_INACBG
+                        },
+
+                        // Data peserta penjelasan
+                        peserta: {
+                            noKartu: e.NOKARTU,
+                            nama: e.NAMA_PASIEN,
+                            noMR: e.MRN
+                        },
+
+                        // Inacbg: kode + nama
+                        Inacbg: {
+                            kode: e.INACBG,
+                            nama: e.DESKRIPSI_INACBG
+                        }
+                    }
+                    getData.push(newData);
+                }
                 let getSEPSIMRS = await bridging_sep.findAll({
                     where: {
                         no_sep: mapSEP,
@@ -2274,7 +2326,8 @@ module.exports = {
                             as: 'maping_dokter_dpjpvclaim',
                         }]
                     });
-                    // console.log(e);
+                    console.log(e);
+                    console.log(regData);
                     e.no_rawat = regData.no_rawat;
                     e.nmDPJP = regData.maping_dokter_dpjpvclaim.nm_dokter_bpjs;
                     e.kdDPJP = regData.maping_dokter_dpjpvclaim.kd_dokter_bpjs;
@@ -2288,9 +2341,11 @@ module.exports = {
                         belums.push(e.noSEP);
                         continue;
                     }
-                    // console.log((e.noSEP));
-                    e.biaya.bySetujui = parseInt(e.biaya.bySetujui);
-                    // e.biaya.bySetujui = parseInt(dataINA.TARIF_INACBG);
+                    if (e.noFPK == '-') {
+                        e.biaya.bySetujui = parseInt(dataINA.TARIF_INACBG);
+                    } else {
+                        e.biaya.bySetujui = parseInt(e.biaya.bySetujui);
+                    }
                     e.biaya.TARIF_INACBG = dataINA.TARIF_INACBG;
                     e.biaya.TARIF_RS = dataINA.TARIF_RS;
                     e.biaya.TARIF_POLI_EKS = dataINA.TARIF_POLI_EKS;
@@ -2390,6 +2445,56 @@ module.exports = {
                     req.cache.expire(`data:monitoring:klaim:${param.from}:${param.until}:${param.pelayanan}:getDataBPJS`, 60 * 60);
                 }
                 let sepKlaim = getData.map(item => item.noSEP);
+                let inacbg = fs.readFileSync('cache/' + param.dataINACBG, 'utf-8');
+                inacbg = JSON.parse(inacbg);
+                const noSEPSet = new Set(getData.map(item => item.noSEP));
+
+                const filteredData2 = inacbg.filter(item => !noSEPSet.has(item.SEP));
+                for (let e of filteredData2) {
+                    let findSEP = await axios.get(url_bpjs + '/api/bpjs/sep?noSEP=' + e.SEP);
+                    let newData = {
+                        noFPK: "x",
+
+                        // Tanggal‑tanggal
+                        tglSep: formatDate(e.ADMISSION_DATE),   // 29/05/2026 → 2026‑05‑29
+                        tglPulang: formatDate(e.DISCHARGE_DATE), // 02/06/2026 → 2026‑06‑02
+
+                        // Nomor SEP
+                        noSEP: e.SEP,  // "1510R0010526V008062"
+
+                        // Kelas rawat (dari KELAS_RAWAT)
+                        kelasRawat: e.KELAS_RAWAT || "",
+
+                        // Poli tidak ada, kosongkan
+                        poli: findSEP.data.response.poli || "",
+
+                        // Status (bisa disesuaikan, contoh default)
+                        status: "4#BELUM",  // Anda bisa replace dengan e.DISCHARGE_STATUS
+
+                        // Biaya – map sesuai apa yang Anda butuhkan
+                        biaya: {
+                            byPengajuan: e.TARIF_INACBG,
+                            byTarifGruper: e.TARIF_INACBG,
+                            byTarifRS: e.TARIF_RS,
+                            byTopup: "0",
+                            bySetujui: e.TARIF_INACBG
+                        },
+
+                        // Data peserta penjelasan
+                        peserta: {
+                            noKartu: e.NOKARTU,
+                            nama: e.NAMA_PASIEN,
+                            noMR: e.MRN
+                        },
+
+                        // Inacbg: kode + nama
+                        Inacbg: {
+                            kode: e.INACBG,
+                            nama: e.DESKRIPSI_INACBG
+                        }
+                    }
+                    getData.push(newData);
+                }
                 let getSEPSIMRS = await bridging_sep.findAll({
                     where: {
                         no_sep: sepKlaim,
@@ -2414,15 +2519,25 @@ module.exports = {
                             as: 'maping_dokter_dpjpvclaim',
                         }]
                     });
+                    if (!regData) {
+                        console.log(e);
+                        return res.status(200).json({
+                            status: false,
+                            message: 'Data tidak ditemukan',
+                            data: e
+                        })
+                        continue;
+                    }
                     e.no_rawat = regData.no_rawat;
                     e.kddpjp = regData.maping_dokter_dpjpvclaim.kd_dokter_bpjs;
                     e.nmdpdjp = regData.maping_dokter_dpjpvclaim.nm_dokter_bpjs;
                     // e.regData = regData;
                 }
+
                 for (let e of getData) {
                     let dataSIMRS = getSEPSIMRS.find(item => item.no_sep === e.noSEP);
                     if (dataSIMRS) {
-                        console.log(dataSIMRS.no_sep);
+                        // console.log(dataSIMRS.no_sep);
                         e.no_rawat = dataSIMRS.no_rawat;
                         e.kddpjp = dataSIMRS.maping_dokter_dpjpvclaim.kd_dokter_bpjs;
                         e.nmdpdjp = dataSIMRS.maping_dokter_dpjpvclaim.nm_dokter_bpjs;
