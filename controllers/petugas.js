@@ -143,7 +143,7 @@ module.exports = {
             });
 
                 req.cache.json.set('API-Khnza:drSpesalis', '$', data);
-                req.cache.expire('API-Khnza:drSpesalis', 3600 * 24);
+                req.cache.expire('API-Khnza:drSpesalis', 60 * 60);
             }
             return res.status(200).json({
                 status: true,

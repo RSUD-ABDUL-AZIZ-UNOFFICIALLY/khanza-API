@@ -284,7 +284,7 @@ module.exports = {
             });
                 cacheKamar = dataKamar;
                 req.cache.json.set(`API-Khnza:kamars:${req.query.nm_bangsal}`, '$', dataKamar);
-                req.cache.expire(`API-Khnza:kamars:${req.query.nm_bangsal}`, 3600 * 24);
+                req.cache.expire(`API-Khnza:kamars:${req.query.nm_bangsal}`, 60 * 60);
             } 
             return res.status(200).json({
                 status: true,
