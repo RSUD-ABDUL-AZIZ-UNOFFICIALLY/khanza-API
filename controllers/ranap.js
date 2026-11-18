@@ -631,8 +631,8 @@ module.exports = {
             return res.status(200).json({
                 status: true,
                 message: "Data diet",
-                record: dataDiet,
-                data: req.query,
+                record: dataDiet.length,
+                data: dataDiet,
             });
         } catch (err) {
             console.log(err);
