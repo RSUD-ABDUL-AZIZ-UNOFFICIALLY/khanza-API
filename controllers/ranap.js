@@ -1,5 +1,5 @@
 'use strict';
-const { reg_periksa, pasien, kamar_inap, kamar, bangsal, pemeriksaan_ranap, dpjp_ranap, pegawai } = require('../models');
+const { reg_periksa, pasien, kamar_inap, kamar, bangsal, pemeriksaan_ranap, dpjp_ranap, pegawai, diet, detail_beri_diet } = require('../models');
 const { getbedinfo } = require('../helpers/beds');
 const { Op } = require("sequelize");
 module.exports = {
@@ -566,6 +566,82 @@ module.exports = {
             rawDUM
         });
 
-    }
+    },
+    getDetailDiet: async (req, res) => {
+        let { tanggal, kd_bangsal, waktu } = req.query;
+        const requiredFields = ['tanggal', 'kd_bangsal'];
+        for (const field of requiredFields) {
+            if (!req.query[field]) {
+                return res.status(400).json({
+                    status: false,
+                    message: "Bad Request",
+                    data: `required field: ${field}`,
+                });
+            }
+        }
+        try {
+            let find_kd_kamar = await kamar.findAll({
+                where: {
+                    statusdata: "1",
+                    kd_bangsal: kd_bangsal
+                },
+                attributes: ['kd_kamar']
+            });
+            let dataKamar = find_kd_kamar.map(item => item.kd_kamar);
+            let dataDiet = await detail_beri_diet.findAll({
+                where: {
+                    tanggal: tanggal,
+                    waktu: waktu,
+                    kd_kamar: {
+                        [Op.in]: dataKamar
+                    }
+                },
+                include: [
+                    {
+                        model: diet,
+                        as: 'diet',
+                        attributes: ['nama_diet']
+                    },
+                    {
+                        model: reg_periksa,
+                        as: 'reg_periksa',
+                        attributes: ['no_rawat'],
+                        include: [
+                            {
+                                model: pasien,
+                                as: 'pasien',
+                                attributes: ['no_rkm_medis', 'nm_pasien', 'jk', 'tmp_lahir', 'tgl_lahir']
+                            }
+                        ]
+                    },
+                    {
+                        model: kamar,
+                        as: 'kamar',
+                        attributes: ['kd_bangsal'],
+                        include: [
+                            {
+                                model: bangsal,
+                                as: 'bangsal',
+                                attributes: ['nm_bangsal']
+                            }
+                        ]
+                    }
+                ]
+            });
+            return res.status(200).json({
+                status: true,
+                message: "Data diet",
+                record: dataDiet,
+                data: req.query,
+            });
+        } catch (err) {
+            console.log(err);
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request",
+                data: err,
+            });
+        }
+    },
 
 }
